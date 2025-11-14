@@ -11,7 +11,7 @@ export function createApiClient(getTokenFn) {
   if (!baseURL) {
     // Not throwing to support local dev without backend yet
     // eslint-disable-next-line no-console
-    console.warn('REACT_APP_API_BASE_URL is not set. API calls will target the current origin.');
+    console.warn('REACT_APP_API_BASE_URL is not set. Set it to http://localhost:3011 for local backend. API calls will target the current origin otherwise.');
   }
 
   const buildHeaders = async (extra = {}) => {

@@ -18,7 +18,7 @@ npm install
 Copy `.env.example` to `.env` and set values:
 - `REACT_APP_SUPABASE_URL` (from Supabase Settings)
 - `REACT_APP_SUPABASE_ANON_KEY` (from Supabase Settings)
-- `REACT_APP_API_BASE_URL` (default: http://localhost:3001 or your preview backend URL)
+- `REACT_APP_API_BASE_URL` (default: http://localhost:3011 or your preview backend URL)
 
 3. Run the app
 ```
@@ -51,7 +51,7 @@ Open http://localhost:3000 in your browser.
 
 ## Quick E2E sanity (manual)
 
-1) Start backend at http://localhost:3001 (see backend README) and frontend at http://localhost:3000
+1) Start backend at http://localhost:3011 (see backend README) and frontend at http://localhost:3000
 2) Login using a Supabase user that has a profile row in public.profiles
 3) Complete onboarding form
 4) Verify redirect to role dashboard (admin/hr/employee)
