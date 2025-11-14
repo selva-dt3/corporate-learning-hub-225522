@@ -61,6 +61,15 @@ Open http://localhost:3000 in your browser.
 - Each request includes `Authorization: Bearer <supabase_access_token>` when the user is signed in.
 - Ensure backend CORS allows your frontend origin (e.g., http://localhost:3000) and any deployed host you use. Mismatch of origins will block requests.
 
+Runtime env quick check:
+- Confirm `public/env.js` exists and loads (see `[env.js] loaded` in console).
+- Visit `/env` to see presence booleans for required keys.
+- Keys required:
+  - REACT_APP_SUPABASE_URL
+  - REACT_APP_SUPABASE_ANON_KEY
+  - REACT_APP_API_BASE_URL
+- For cloud preview, set REACT_APP_API_BASE_URL to the running backend base URL (e.g., https://vscode-internal-12349-beta.beta01.cloud.kavia.ai:3001).
+
 ## Project Structure
 
 - `src/auth/SupabaseProvider.js` — Initializes a single Supabase client (v2 signature), provides auth/session/role, profile fetching, and onboarding completion.

@@ -19,6 +19,12 @@ Environment configuration:
   - After changing `public/env.js`, perform a hard refresh (Shift+Reload) to avoid cached script issues.
   - A masked console log `[env.js] loaded` will appear confirming presence of keys.
 
+CORS checklist:
+- Backend lms_backend/.env sets FRONTEND_URL to your primary frontend origin.
+- Backend CORS_ORIGINS includes localhost and your preview frontend origin(s).
+- Example:
+  CORS_ORIGINS=http://localhost:3000,https://vscode-internal-12349-beta.beta01.cloud.kavia.ai:3000
+
 Recommended runtime values (example):
 - window.__ENV__.REACT_APP_SUPABASE_URL = "https://zladwgqmjudpsnhaunct.supabase.co";
 - window.__ENV__.REACT_APP_SUPABASE_ANON_KEY = "<anon key>";
