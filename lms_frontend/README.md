@@ -15,6 +15,8 @@ npm install
 ```
 
 2. Configure environment variables
+
+Option A — Build-time via `.env` (requires restart):
 Create a `.env` file at the project root (next to `package.json`) with:
 ```
 REACT_APP_SUPABASE_URL=<Your Supabase project URL>
@@ -23,24 +25,30 @@ REACT_APP_API_BASE_URL=http://localhost:3011
 # Confirmed cloud backend (beta env):
 # REACT_APP_API_BASE_URL=https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001
 ```
+
+Option B — Runtime via `public/env.js` (no rebuild):
+Edit `public/env.js` to set:
+```html
+<script>
+// Example values
+window._env_ = {
+  REACT_APP_SUPABASE_URL: "https://zladwgqmjudpsnhaunct.supabase.co",
+  REACT_APP_SUPABASE_ANON_KEY: "<anon key>",
+  REACT_APP_API_BASE_URL: "https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001"
+};
+</script>
+```
 Notes:
-- You may alternatively inject runtime variables via `window._env_` if your host supports it.
-  Example in `public/runtime-env.js`:
-  ```
-  window._env_ = {
-    REACT_APP_SUPABASE_URL: "<Your URL>",
-    REACT_APP_SUPABASE_ANON_KEY: "<Your anon key>",
-    REACT_APP_API_BASE_URL: "http://localhost:3011"
-  };
-  ```
-- The app reads both `process.env` and `window._env_` overrides.
+- Runtime values in `window._env_` override `.env` values.
+- Changing `public/env.js` requires only a browser refresh.
 
 3. Run the app
 ```
 npm start
 ```
 
-If you update `.env`, restart the dev server or your preview instance so changes take effect.
+If you update `.env`, restart the dev server or your preview instance so changes take effect.  
+If you update `public/env.js`, just refresh the browser.
 
 Open http://localhost:3000 in your browser.
 
@@ -55,7 +63,7 @@ Open http://localhost:3000 in your browser.
 - `src/auth/SupabaseProvider.js` — Initializes a single Supabase client, provides auth/session/role, profile fetching, and onboarding completion.
 - `src/auth/ProtectedRoute.jsx` — Enforces authentication and optional roles; redirects to onboarding if incomplete.
 - `src/api/client.js` — Fetch wrapper with `Authorization: Bearer <token>`, base URL from env.
-- `src/config/env.js` — Centralized environment reader that checks `window._env_` and `process.env`.
+- `src/config/env.js` — Centralized environment reader that checks `window._env_`, `import.meta.env`, and `process.env`.
 - `src/router.jsx` — App routes using `react-router-dom`, with nested shell layout (Sidebar + Topbar).
 - React Router v7 future flags enabled to silence deprecation warnings:
   - Set in `src/index.js` via `window.__reactRouterFuture = { v7_startTransition: true, v7_relativeSplatPath: true }`.
@@ -85,4 +93,7 @@ Required:
 - `REACT_APP_SUPABASE_ANON_KEY`
 - `REACT_APP_API_BASE_URL`
 
-After editing `.env`, restart the preview/dev server so changes are picked up.
+Behavior:
+- The app reads values in this order: `window._env_` -> `import.meta.env` -> `process.env`.
+- Missing required keys produce a single console warning via `assertRequiredEnv`.
+- After editing `.env`, restart the dev server. After editing `public/env.js`, just refresh the browser.

@@ -11,11 +11,23 @@ Quick start:
 - npm install
 - npm start
 
-Note: After changing `.env`, restart the dev server or preview so environment changes take effect.
+Environment configuration:
+- Build-time: `.env` (requires dev server restart)
+- Runtime overrides (no rebuild): edit `lms_frontend/public/env.js`
+  - These values are read via `window._env_` at runtime and override `.env`.
+
+Recommended runtime values (example):
+- window._env_.REACT_APP_SUPABASE_URL = "https://zladwgqmjudpsnhaunct.supabase.co";
+- window._env_.REACT_APP_SUPABASE_ANON_KEY = "<anon key>";
+- window._env_.REACT_APP_API_BASE_URL = "https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001"
+
+Notes:
+- If you change `.env`, restart the dev server or preview so changes take effect.
+- If you change `public/env.js`, no rebuild is needed; just refresh the browser.
 
 Backend base URL:
 - The frontend reads REACT_APP_API_BASE_URL. For the current environment use:
   https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001
-- After setting this in lms_frontend/.env, restart the preview/dev server to apply.
+- You can set this in either `lms_frontend/.env` (requires restart) or `lms_frontend/public/env.js` (no rebuild).
 
 See lms_frontend/README.md for detailed instructions and E2E sanity steps.

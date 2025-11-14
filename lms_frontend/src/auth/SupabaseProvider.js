@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { createApiClient } from '../api/client';
-import { getStringEnv } from '../config/env';
+import { getStringEnv, assertRequiredEnv } from '../config/env';
 
 // PUBLIC_INTERFACE
 export const AuthContext = createContext(null);
@@ -16,6 +16,11 @@ export const AuthContext = createContext(null);
 let warnedOnce = false;
 
 // Resolve env values with fallback
+assertRequiredEnv([
+  'REACT_APP_SUPABASE_URL',
+  'REACT_APP_SUPABASE_ANON_KEY',
+]);
+
 const resolvedUrl =
   getStringEnv('REACT_APP_SUPABASE_URL') || getStringEnv('SUPABASE_URL', '');
 const resolvedAnon =
