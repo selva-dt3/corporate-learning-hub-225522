@@ -1,82 +1,58 @@
-# Lightweight React Template for KAVIA
+# LMS Frontend (React)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
-
-## Features
-
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+This is the React frontend for the Corporate Learning Hub. It implements:
+- Supabase authentication (email/password)
+- Role-based navigation (admin, hr, employee)
+- Onboarding flow (minimal fields with backend/Supabase fallback)
+- Dashboards and stub views for Lessons, Quizzes, and Analytics
+- API client that forwards the Supabase access token
 
 ## Getting Started
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-### `npm test`
-
-Launches the test runner in interactive watch mode.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-## Customization
-
-### Colors
-
-The main brand colors are defined as CSS variables in `src/App.css`:
-
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
+1. Install dependencies
+```
+npm install
 ```
 
-### Components
+2. Configure environment variables
+Copy `.env.example` to `.env` and set values:
+- `REACT_APP_SUPABASE_URL`
+- `REACT_APP_SUPABASE_ANON_KEY`
+- `REACT_APP_API_BASE_URL` (optional; when backend available)
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+3. Run the app
+```
+npm start
+```
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+Open http://localhost:3000 in your browser.
 
-## Learn More
+## Project Structure
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- `src/auth/SupabaseProvider.js` — Initializes Supabase client, provides auth/session/role context, profile fetching, and onboarding completion.
+- `src/auth/ProtectedRoute.jsx` — Enforces authentication and optional roles; redirects to onboarding if incomplete.
+- `src/api/client.js` — Fetch wrapper with `Authorization: Bearer <token>` header, base URL from `REACT_APP_API_BASE_URL`.
+- `src/router.jsx` — App routes using `react-router-dom`, with nested shell layout (Sidebar + Topbar).
+- `src/pages` — Login, Onboarding, and role-specific dashboards; Lessons, Quizzes, Analytics pages (stubbed until backend endpoints are ready).
+- `src/components/layout` — Sidebar and Topbar shared layout components.
+- `src/App.css` — Theme and layout styles using Ocean Professional color palette.
 
-### Code Splitting
+## Notes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- Role and onboarding are fetched from backend `/me` if `REACT_APP_API_BASE_URL` is set; otherwise the app falls back to the Supabase `profiles` table with fields: `role`, `onboarding_complete`, `full_name`, `department`.
+- When the backend is ready, implement the following endpoints to replace stubs:
+  - `GET /me` -> `{ role: 'admin'|'hr'|'employee', onboarding_complete: boolean, ... }`
+  - `POST /onboarding/complete`
+  - `GET /lessons`, `POST /lessons`, `DELETE /lessons/:id`
+  - `GET /quizzes`
+  - `GET /analytics/summary`
 
-### Analyzing the Bundle Size
+## Security
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- No secrets are hardcoded.
+- Tokens are read at runtime from Supabase session.
+- All API calls include the bearer token when available.
 
-### Making a Progressive Web App
+## Environment Variables
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+See `.env.example` for required settings.
