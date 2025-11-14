@@ -28,7 +28,7 @@ async function fetchUserProfile(getToken) {
   const hasBackend = !!process.env.REACT_APP_API_BASE_URL;
   if (hasBackend) {
     try {
-      const me = await api.get('/me');
+      const me = await api.get('/auth/profile');
       return {
         role: me?.role || 'employee',
         onboarding_complete: !!me?.onboarding_complete,
@@ -49,7 +49,7 @@ async function fetchUserProfile(getToken) {
   const { data, error } = await supabase
     .from('profiles')
     .select('role,onboarding_complete,full_name,department')
-    .eq('id', user.id)
+    .eq('user_id', user.id)
     .single();
 
   if (error) {
