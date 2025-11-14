@@ -1,19 +1,38 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { createApiClient } from '../api/client';
+import { getStringEnv } from '../config/env';
 
 // PUBLIC_INTERFACE
 export const AuthContext = createContext(null);
 
 /**
  * Supabase client initialization from environment variables.
- * Requires:
- * - REACT_APP_SUPABASE_URL
- * - REACT_APP_SUPABASE_ANON_KEY
+ * Reads from runtime (window._env_) or build-time (process.env).
+ * Keys supported:
+ * - REACT_APP_SUPABASE_URL or SUPABASE_URL
+ * - REACT_APP_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY
  */
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseAnon = process.env.REACT_APP_SUPABASE_ANON_KEY;
-export const supabase = supabaseUrl && supabaseAnon ? createClient(supabaseUrl, supabaseAnon) : null;
+let warnedOnce = false;
+
+// Resolve env values with fallback
+const resolvedUrl =
+  getStringEnv('REACT_APP_SUPABASE_URL') || getStringEnv('SUPABASE_URL', '');
+const resolvedAnon =
+  getStringEnv('REACT_APP_SUPABASE_ANON_KEY') ||
+  getStringEnv('SUPABASE_ANON_KEY', '');
+
+// Initialize a single shared Supabase client instance.
+// Using @supabase/supabase-js v2 signature; third argument used for explicit auth config.
+export const supabase =
+  resolvedUrl && resolvedAnon
+    ? createClient(resolvedUrl, resolvedAnon, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+        },
+      })
+    : null;
 
 /**
  * Fetches role and onboarding flag for current user.
@@ -24,8 +43,11 @@ async function fetchUserProfile(getToken) {
   const token = await getToken();
   const api = createApiClient(async () => token);
 
-  // Try backend endpoint if REACT_APP_API_BASE_URL is set
-  const hasBackend = !!process.env.REACT_APP_API_BASE_URL;
+  // Try backend endpoint if configured
+  const hasBackend =
+    !!getStringEnv('REACT_APP_API_BASE_URL') ||
+    !!getStringEnv('API_BASE_URL');
+
   if (hasBackend) {
     try {
       const me = await api.get('/auth/profile');
@@ -77,8 +99,13 @@ export function SupabaseProvider({ children }) {
 
   useEffect(() => {
     if (!supabase) {
-      // eslint-disable-next-line no-console
-      console.warn('Supabase not configured. Provide REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY.');
+      if (!warnedOnce) {
+        warnedOnce = true;
+        // eslint-disable-next-line no-console
+        console.warn(
+          'Supabase not configured. Provide REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY (or runtime window._env_ overrides).'
+        );
+      }
       setLoading(false);
       return;
     }
