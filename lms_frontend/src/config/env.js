@@ -12,6 +12,61 @@
 let warnedMissingOnce = false;
 let infoLoggedOnce = false;
 
+// Internal singleton promise to ensure we fetch /env.js at most once if needed
+let _envInitPromise = null;
+
+/**
+ * PUBLIC_INTERFACE
+ * initEnv
+ */
+export function initEnv() {
+  /**
+   * Ensure window._env_ is populated before application bootstrap.
+   * If window._env_ is already present with expected keys, resolves immediately.
+   * Otherwise attempts a one-time fetch of /env.js to populate it, then resolves.
+   */
+  if (typeof window === 'undefined') {
+    // SSR/Node: nothing to do
+    return Promise.resolve();
+  }
+
+  // If we've already started an init, return it
+  if (_envInitPromise) return _envInitPromise;
+
+  // Basic predicate: do we have the expected keys?
+  const hasKeys = () => {
+    const w = window._env_ || {};
+    return Boolean(w?.REACT_APP_SUPABASE_URL || w?.REACT_APP_SUPABASE_ANON_KEY || w?.REACT_APP_API_BASE_URL);
+  };
+
+  if (hasKeys()) {
+    _envInitPromise = Promise.resolve();
+    return _envInitPromise;
+  }
+
+  // One-time dynamic loader as fallback if the script didn't load yet
+  _envInitPromise = new Promise((resolve) => {
+    // Try to fetch env.js and eval it in global scope to populate window._env_
+    fetch('/env.js', { cache: 'no-store' })
+      .then(async (resp) => {
+        if (!resp.ok) throw new Error(`env.js HTTP ${resp.status}`);
+        const scriptText = await resp.text();
+        // Execute the env.js content
+        // eslint-disable-next-line no-new-func
+        const fn = new Function(scriptText);
+        fn();
+      })
+      .catch(() => {
+        // swallow - we'll fall back to process.env values only
+      })
+      .finally(() => {
+        resolve();
+      });
+  });
+
+  return _envInitPromise;
+}
+
 /**
  * PUBLIC_INTERFACE
  * getEnv

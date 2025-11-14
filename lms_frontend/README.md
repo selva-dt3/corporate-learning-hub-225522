@@ -39,6 +39,7 @@ window._env_ = Object.assign({}, window._env_ || {}, {
 Notes:
 - Values in `public/env.js` (window._env_) take precedence over `.env`.
 - Changing `public/env.js` requires only a browser refresh (no rebuild).
+- If the script is cached or didn’t load yet, the app will attempt a one-time fetch of `/env.js` during bootstrap and then proceed.
 
 3. Run the app
 ```
@@ -46,7 +47,7 @@ npm start
 ```
 
 If you update `.env`, restart the dev server or your preview instance so changes take effect.  
-If you update `public/env.js`, just refresh the browser.
+If you update `public/env.js`, a normal refresh is typically enough. If the file looks cached, perform a hard refresh (Shift+Reload).
 
 Open http://localhost:3000 in your browser.
 
@@ -58,13 +59,13 @@ Open http://localhost:3000 in your browser.
 
 ## Project Structure
 
-- `src/auth/SupabaseProvider.js` — Initializes a single Supabase client, provides auth/session/role, profile fetching, and onboarding completion.
+- `src/auth/SupabaseProvider.js` — Initializes a single Supabase client (v2 signature), provides auth/session/role, profile fetching, and onboarding completion.
 - `src/auth/ProtectedRoute.jsx` — Enforces authentication and optional roles; redirects to onboarding if incomplete.
 - `src/api/client.js` — Fetch wrapper with `Authorization: Bearer <token>`, base URL from env.
-- `src/config/env.js` — Centralized environment reader that checks `window._env_`, `import.meta.env`, and `process.env`.
+- `src/config/env.js` — Centralized environment reader with Promise-based `initEnv()` that loads `window._env_` and fetches `/env.js` once if needed.
 - `src/router.jsx` — App routes using `react-router-dom`, with nested shell layout (Sidebar + Topbar).
 - React Router v7 future flags enabled to silence deprecation warnings:
-  - Set in `src/index.js` via `window.__reactRouterFuture = { v7_startTransition: true, v7_relativeSplatPath: true }`.
+  - Set via `createBrowserRouter` future flags.
   - Reference: https://reactrouter.com/en/main/upgrading/future#future-flags
 - `src/pages` — Login, Onboarding, and role-specific dashboards; Lessons, Quizzes, Analytics pages.
 - `src/components/layout` — Sidebar and Topbar shared layout components.
@@ -75,6 +76,7 @@ Open http://localhost:3000 in your browser.
 - No secrets are hardcoded.
 - Tokens are read at runtime from Supabase session.
 - All API calls include the bearer token when available.
+- Logs mask keys: we only log boolean presence of env vars.
 
 ## Quick E2E sanity (manual)
 
@@ -93,7 +95,8 @@ Required:
 
 Behavior:
 - The app reads values in this order: `window._env_` -> `process.env` (CRA).
-- `public/index.html` loads `env.js` before the bundle so `window._env_` is always available.
+- `public/index.html` loads `env.js` before the bundle so `window._env_` is available at runtime.
+- The app also falls back to fetching `/env.js` once during bootstrap if it wasn’t already initialized.
 - Missing required keys produce a single console warning via `assertRequiredEnv`.
 - After editing `.env`, restart the dev server. After editing `public/env.js`, hard refresh the browser to avoid cached script.
 - Diagnostics: open `/env` to verify booleans for expected keys (no secrets shown).

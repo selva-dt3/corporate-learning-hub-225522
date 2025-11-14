@@ -4,6 +4,7 @@ import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { SupabaseProvider } from './auth/SupabaseProvider';
 import Router from './router';
+import { initEnv } from './config/env';
 
 /**
  * React Router v7 future flags:
@@ -14,14 +15,9 @@ import Router from './router';
  */
 const router = createBrowserRouter(
   [
-    // Delegate route definitions to our Router component using createRoutesFromElements-like structure.
-    // We keep Router as a component that renders <Routes> to avoid changing app behavior.
-    // Here we mount a single catch-all element that hosts the app and its routes.
     {
       path: '*',
-      element: (
-        <Router />
-      ),
+      element: <Router />,
     },
   ],
   {
@@ -32,11 +28,16 @@ const router = createBrowserRouter(
   }
 );
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <SupabaseProvider>
-      <RouterProvider router={router} />
-    </SupabaseProvider>
-  </React.StrictMode>
-);
+(async () => {
+  // Ensure runtime env is loaded before any component reads it
+  await initEnv();
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(
+    <React.StrictMode>
+      <SupabaseProvider>
+        <RouterProvider router={router} />
+      </SupabaseProvider>
+    </React.StrictMode>
+  );
+})();

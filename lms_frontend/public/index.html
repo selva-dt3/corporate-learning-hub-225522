@@ -1,21 +1,21 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1E3A8A" />
+    <meta name="theme-color" content="#000000" />
     <meta
       name="description"
       content="Corporate Learning Hub - LMS Frontend"
     />
     <title>Corporate Learning Hub</title>
-    <!-- Ensure runtime env is available before the app bundle -->
+    <!-- Load runtime env BEFORE any bundle to guarantee window._env_ -->
     <script src="%PUBLIC_URL%/env.js"></script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <!-- CRA will inject built JS bundles here -->
+    <!-- CRA will inject bundle scripts here -->
   </body>
 </html>
