@@ -1,28 +1,42 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import { BrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { SupabaseProvider } from './auth/SupabaseProvider';
 import Router from './router';
 
-// Enable React Router v7 behavior flags while staying on v6 to silence warnings.
-// These flags are read by react-router when present on the global window object.
-// See: https://reactrouter.com/en/main/upgrading/future#future-flags
-if (typeof window !== 'undefined') {
-  // Opt-in to v7 semantics with no behavior change expected for this app.
-  window.__reactRouterFuture = {
-    v7_startTransition: true,
-    v7_relativeSplatPath: true,
-  };
-}
+/**
+ * React Router v7 future flags:
+ * - v7_startTransition: use React.startTransition for navigation updates.
+ * - v7_relativeSplatPath: adopt relative splat path resolution coming in v7.
+ * We pass these on the router instance to silence v7 deprecation warnings while on v6.
+ * Ref: https://reactrouter.com/en/main/upgrading/future#future-flags
+ */
+const router = createBrowserRouter(
+  [
+    // Delegate route definitions to our Router component using createRoutesFromElements-like structure.
+    // We keep Router as a component that renders <Routes> to avoid changing app behavior.
+    // Here we mount a single catch-all element that hosts the app and its routes.
+    {
+      path: '*',
+      element: (
+        <Router />
+      ),
+    },
+  ],
+  {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    },
+  }
+);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <SupabaseProvider>
-      <BrowserRouter>
-        <Router />
-      </BrowserRouter>
+      <RouterProvider router={router} />
     </SupabaseProvider>
   </React.StrictMode>
 );
