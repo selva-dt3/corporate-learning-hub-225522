@@ -1,38 +1,29 @@
-;(function () {
+(function () {
   /**
-   * Runtime environment overrides.
-   * This file is loaded by public/index.html BEFORE the main bundle so window._env_ is available.
-   * Values here take precedence over .env build-time values.
-   *
-   * DO NOT put secrets in this repo. For local/dev, you can edit this file temporarily.
-   * For deployments, this file should be generated at deploy time with the environment values.
-   *
-   * Required keys for Supabase auth:
-   * - REACT_APP_SUPABASE_URL
-   * - REACT_APP_SUPABASE_ANON_KEY
-   *
-   * Optional:
-   * - REACT_APP_API_BASE_URL
+   * Runtime env overrides. This file is loaded by public/index.html prior to the bundle.
+   * It sets window.__ENV__ as requested and mirrors values into window._env_ that the app reads.
+   * Update values below or leave empty strings to rely on .env build-time variables.
    */
-  var current = (typeof window !== 'undefined' && window._env_) || {};
-  var injected = {
-    // Example placeholders. Replace at runtime/deploy:
-    // REACT_APP_SUPABASE_URL: "https://your-project.supabase.co",
-    // REACT_APP_SUPABASE_ANON_KEY: "<anon-key>",
-    // REACT_APP_API_BASE_URL: "http://localhost:3011"
+  var env = {
+    REACT_APP_SUPABASE_URL: "",
+    REACT_APP_SUPABASE_ANON_KEY: "",
+    REACT_APP_API_BASE_URL: ""
   };
 
-  // Merge preserving any pre-existing values
-  var next = Object.assign({}, current, injected);
-  window._env_ = next;
+  // Expose as __ENV__ (per requirement)
+  window.__ENV__ = Object.assign({}, window.__ENV__ || {}, env);
 
-  // Minimal masked diagnostic to confirm presence without leaking secrets
+  // Also expose as _env_ to keep compatibility with the existing env reader
+  window._env_ = Object.assign({}, window._env_ || {}, env);
+
   try {
     // eslint-disable-next-line no-console
-    console.info('[env.js] loaded', {
-      REACT_APP_SUPABASE_URL: Boolean(next.REACT_APP_SUPABASE_URL),
-      REACT_APP_SUPABASE_ANON_KEY: Boolean(next.REACT_APP_SUPABASE_ANON_KEY),
-      REACT_APP_API_BASE_URL: Boolean(next.REACT_APP_API_BASE_URL),
+    console.log("[env.js] loaded", {
+      REACT_APP_SUPABASE_URL: Boolean(env.REACT_APP_SUPABASE_URL),
+      REACT_APP_SUPABASE_ANON_KEY: Boolean(env.REACT_APP_SUPABASE_ANON_KEY),
+      REACT_APP_API_BASE_URL: Boolean(env.REACT_APP_API_BASE_URL)
     });
-  } catch (_) { /* noop */ }
+  } catch (e) {
+    /* noop */
+  }
 })();

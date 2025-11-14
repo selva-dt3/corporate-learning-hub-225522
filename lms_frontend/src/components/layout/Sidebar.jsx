@@ -9,6 +9,8 @@ import { NavLink } from 'react-router-dom';
  */
 // PUBLIC_INTERFACE
 export default function Sidebar({ role }) {
+  const isManager = role === 'admin' || role === 'hr';
+
   return (
     <aside className="sidebar">
       <div style={{ padding: '0 1rem', marginBottom: '0.75rem' }}>
@@ -19,8 +21,10 @@ export default function Sidebar({ role }) {
         <NavLink to="/" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Dashboard</NavLink>
         <NavLink to="/lessons" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Lessons</NavLink>
         <NavLink to="/quizzes" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Quizzes</NavLink>
+        {/* Placeholder route (not implemented in this milestone) */}
+        <span className="nav-item" aria-disabled="true" title="Assignments page coming soon" style={{ opacity: 0.6 }}>Assignments</span>
 
-        {(role === 'hr' || role === 'admin') && (
+        {isManager && (
           <>
             <div style={{ padding: '0.6rem 1rem', color: 'var(--text-secondary)', fontSize: 12, marginTop: '0.5rem' }}>
               HR

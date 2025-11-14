@@ -3,54 +3,69 @@ import { useAuth } from '../auth/useAuth';
 
 /**
  * Analytics summary for HR/Admin roles.
+ * Renders cards for keys returned by GET /analytics/summary:
+ *  - users, lessons, quizzes, assignments, quiz_submissions
+ * Handles 401/403 by showing a role/access message.
  */
 // PUBLIC_INTERFACE
 export default function Analytics() {
   const { api } = useAuth();
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState('');
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       setError('');
+      setAccessDenied(false);
+      setLoading(true);
       try {
-        const data = await api.get('/analytics/summary').catch(() => ({
-          total_users: 128,
-          active_learners: 93,
-          lessons_completed: 420,
-          quiz_pass_rate: 0.87
-        }));
-        setSummary(data);
+        const data = await api.get('/analytics/summary');
+        setSummary(data || {});
       } catch (e) {
-        setError(e.message || 'Failed to load analytics');
+        if (e?.status === 401 || e?.status === 403) {
+          setAccessDenied(true);
+        } else {
+          setError(e?.message || 'Failed to load analytics');
+        }
+      } finally {
+        setLoading(false);
       }
     };
     load();
   }, [api]);
 
+  const Card = ({ title, value, accent }) => (
+    <div className="card">
+      <h3 style={{ marginTop: 0 }}>{title}</h3>
+      <div style={{ fontSize: 28, fontWeight: 700, color: accent || 'inherit' }}>{value ?? '-'}</div>
+    </div>
+  );
+
   return (
     <div>
       <h2 style={{ marginTop: 0 }}>Analytics</h2>
-      {error && <div className="status error" style={{ marginBottom: '1rem' }}>{error}</div>}
+
+      {accessDenied && (
+        <div className="status warning" style={{ display: 'block', marginBottom: '1rem' }}>
+          You do not have access to analytics. This section is available to Admin and HR roles.
+        </div>
+      )}
+      {error && <div className="status error" style={{ display: 'block', marginBottom: '1rem' }}>{error}</div>}
+
       <div className="form-row">
-        <div className="card">
-          <h3>Total users</h3>
-          <div style={{ fontSize: 28, fontWeight: 700 }}>{summary?.total_users ?? '-'}</div>
-        </div>
-        <div className="card">
-          <h3>Active learners</h3>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--success)' }}>{summary?.active_learners ?? '-'}</div>
-        </div>
-        <div className="card">
-          <h3>Lessons completed</h3>
-          <div style={{ fontSize: 28, fontWeight: 700 }}>{summary?.lessons_completed ?? '-'}</div>
-        </div>
-        <div className="card">
-          <h3>Quiz pass rate</h3>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--primary)' }}>
-            {summary?.quiz_pass_rate != null ? `${Math.round(summary.quiz_pass_rate * 100)}%` : '-'}
-          </div>
-        </div>
+        {loading ? (
+          <div className="card">Loading...</div>
+        ) : (
+          <>
+            <Card title="Users" value={summary?.users} />
+            <Card title="Lessons" value={summary?.lessons} />
+            <Card title="Quizzes" value={summary?.quizzes} />
+            <Card title="Assignments" value={summary?.assignments} />
+            <Card title="Quiz submissions" value={summary?.quiz_submissions} accent="var(--primary)" />
+          </>
+        )}
       </div>
     </div>
   );

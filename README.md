@@ -14,15 +14,15 @@ Quick start:
 Environment configuration:
 - Build-time: `.env` (requires dev server restart)
 - Runtime overrides (no rebuild): edit `lms_frontend/public/env.js`
-  - Values in `public/env.js` are injected into `window._env_` and take precedence over `.env`.
-  - public/index.html includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle to ensure `window._env_` is available at runtime.
+  - Values in `public/env.js` are injected into `window.__ENV__` and mirrored to `window._env_`. They take precedence over `.env`.
+  - public/index.html includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle to ensure runtime env is available.
   - After changing `public/env.js`, perform a hard refresh (Shift+Reload) to avoid cached script issues.
   - A masked console log `[env.js] loaded` will appear confirming presence of keys.
 
 Recommended runtime values (example):
-- window._env_.REACT_APP_SUPABASE_URL = "https://zladwgqmjudpsnhaunct.supabase.co";
-- window._env_.REACT_APP_SUPABASE_ANON_KEY = "<anon key>";
-- window._env_.REACT_APP_API_BASE_URL = "https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001"
+- window.__ENV__.REACT_APP_SUPABASE_URL = "https://zladwgqmjudpsnhaunct.supabase.co";
+- window.__ENV__.REACT_APP_SUPABASE_ANON_KEY = "<anon key>";
+- window.__ENV__.REACT_APP_API_BASE_URL = "https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001"
 
 Notes:
 - If you change `.env`, restart the dev server or preview so changes take effect.

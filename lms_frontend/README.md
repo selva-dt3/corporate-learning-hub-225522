@@ -27,17 +27,17 @@ REACT_APP_API_BASE_URL=http://localhost:3011
 ```
 
 Option B — Runtime via `public/env.js` (no rebuild):
-- `public/index.html` includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle so `window._env_` is available.
-- Edit `public/env.js` to set, for example (masked logs will confirm presence):
+- `public/index.html` includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle so runtime env is available.
+- Edit `public/env.js` to set values on `window.__ENV__` (and mirrored automatically to `window._env_` for compatibility):
 ```js
-window._env_ = Object.assign({}, window._env_ || {}, {
+window.__ENV__ = Object.assign({}, window.__ENV__ || {}, {
   REACT_APP_SUPABASE_URL: "https://zladwgqmjudpsnhaunct.supabase.co",
   REACT_APP_SUPABASE_ANON_KEY: "<anon key>",
   REACT_APP_API_BASE_URL: "https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001"
 });
 ```
 Notes:
-- Values in `public/env.js` (window._env_) take precedence over `.env`.
+- Values in `public/env.js` take precedence over `.env`.
 - Changing `public/env.js` requires only a browser refresh (no rebuild). Prefer a hard refresh if cached.
 - If the script is cached or didn’t load yet, the app attempts a one-time fetch of `/env.js` during bootstrap and then proceeds.
 - Console diagnostics:
@@ -57,20 +57,18 @@ Open http://localhost:3000 in your browser.
 
 ## Integration with Backend
 
-- API base URL is read from `REACT_APP_API_BASE_URL` (or `window._env_.REACT_APP_API_BASE_URL`).
+- API base URL is read from `REACT_APP_API_BASE_URL` (or `window._env_.REACT_APP_API_BASE_URL` / `window.__ENV__.REACT_APP_API_BASE_URL`).
 - Each request includes `Authorization: Bearer <supabase_access_token>` when the user is signed in.
-- Ensure backend CORS allows your frontend origin (e.g., http://localhost:3000).
+- Ensure backend CORS allows your frontend origin (e.g., http://localhost:3000) and any deployed host you use. Mismatch of origins will block requests.
 
 ## Project Structure
 
 - `src/auth/SupabaseProvider.js` — Initializes a single Supabase client (v2 signature), provides auth/session/role, profile fetching, and onboarding completion.
 - `src/auth/ProtectedRoute.jsx` — Enforces authentication and optional roles; redirects to onboarding if incomplete.
 - `src/api/client.js` — Fetch wrapper with `Authorization: Bearer <token>`, base URL from env.
-- `src/config/env.js` — Centralized environment reader with Promise-based `initEnv()` that loads `window._env_` and fetches `/env.js` once if needed.
+- `src/config/env.js` — Centralized environment reader with Promise-based `initEnv()` that loads runtime env and fetches `/env.js` once if needed.
 - `src/router.jsx` — App routes using `react-router-dom`, with nested shell layout (Sidebar + Topbar).
-- React Router v7 future flags enabled to silence deprecation warnings:
-  - Set via `createBrowserRouter` future flags.
-  - Reference: https://reactrouter.com/en/main/upgrading/future#future-flags
+- React Router v7 future flags enabled to silence deprecation warnings (set on router).
 - `src/pages` — Login, Onboarding, and role-specific dashboards; Lessons, Quizzes, Analytics pages.
 - `src/components/layout` — Sidebar and Topbar shared layout components.
 - `src/App.css` — Theme and layout styles using Ocean Professional color palette.
@@ -88,7 +86,7 @@ Open http://localhost:3000 in your browser.
 2) Login using a Supabase user that has a profile row in public.profiles  
 3) Complete onboarding form  
 4) Verify redirect to role dashboard (admin/hr/employee)  
-5) Navigate to Lessons (list/create), Quizzes (list), and Analytics (for hr/admin only)
+5) Navigate to Lessons (list/create), Quizzes (list/create for admin/hr), and Analytics (for hr/admin only)
 
 ## Environment Variables
 
@@ -98,8 +96,8 @@ Required:
 - `REACT_APP_API_BASE_URL`
 
 Behavior:
-- The app reads values in this order: `window._env_` -> `process.env` (CRA).
-- `public/index.html` loads `env.js` before the bundle so `window._env_` is available at runtime.
+- The app reads values in this order: `window._env_` (or `window.__ENV__`) -> `process.env` (CRA).
+- `public/index.html` loads `env.js` before the bundle so runtime env is available at startup.
 - The app also falls back to fetching `/env.js` once during bootstrap if it wasn’t already initialized.
 - Missing required keys produce a single console warning via `assertRequiredEnv`.
 - After editing `.env`, restart the dev server. After editing `public/env.js`, hard refresh the browser to avoid cached script.
