@@ -20,6 +20,8 @@ Create a `.env` file at the project root (next to `package.json`) with:
 REACT_APP_SUPABASE_URL=<Your Supabase project URL>
 REACT_APP_SUPABASE_ANON_KEY=<Your Supabase anon key>
 REACT_APP_API_BASE_URL=http://localhost:3011
+# Confirmed cloud backend (beta env):
+# REACT_APP_API_BASE_URL=https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001
 ```
 Notes:
 - You may alternatively inject runtime variables via `window._env_` if your host supports it.
