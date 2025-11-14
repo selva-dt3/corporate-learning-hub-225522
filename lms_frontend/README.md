@@ -55,6 +55,9 @@ Open http://localhost:3000 in your browser.
 - `src/api/client.js` — Fetch wrapper with `Authorization: Bearer <token>`, base URL from env.
 - `src/config/env.js` — Centralized environment reader that checks `window._env_` and `process.env`.
 - `src/router.jsx` — App routes using `react-router-dom`, with nested shell layout (Sidebar + Topbar).
+- React Router v7 future flags enabled to silence deprecation warnings:
+  - Set in `src/index.js` via `window.__reactRouterFuture = { v7_startTransition: true, v7_relativeSplatPath: true }`.
+  - Reference: https://reactrouter.com/en/main/upgrading/future#future-flags
 - `src/pages` — Login, Onboarding, and role-specific dashboards; Lessons, Quizzes, Analytics pages.
 - `src/components/layout` — Sidebar and Topbar shared layout components.
 - `src/App.css` — Theme and layout styles using Ocean Professional color palette.
