@@ -15,7 +15,8 @@ Environment configuration:
 - Build-time: `.env` (requires dev server restart)
 - Runtime overrides (no rebuild): edit `lms_frontend/public/env.js`
   - Values in `public/env.js` are injected into `window._env_` and take precedence over `.env`.
-  - Only a browser refresh is required after changing `public/env.js`.
+  - public/index.html now includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle to ensure `window._env_` is available at runtime.
+  - After changing `public/env.js`, perform a hard refresh (Shift+Reload) to avoid cached script issues.
 
 Recommended runtime values (example):
 - window._env_.REACT_APP_SUPABASE_URL = "https://zladwgqmjudpsnhaunct.supabase.co";
@@ -24,7 +25,8 @@ Recommended runtime values (example):
 
 Notes:
 - If you change `.env`, restart the dev server or preview so changes take effect.
-- If you change `public/env.js`, no rebuild is needed; just refresh the browser (values are read at runtime).
+- If you change `public/env.js`, no rebuild is needed; just refresh the browser (values are read at runtime). Prefer a hard refresh if the file looks cached.
+- A minimal diagnostics page is available at `/env` (development-safe) which shows booleans for presence of expected keys.
 
 Backend base URL:
 - The frontend reads REACT_APP_API_BASE_URL. For the current environment use:

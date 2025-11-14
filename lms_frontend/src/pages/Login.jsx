@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 
 /**
@@ -39,6 +39,9 @@ export default function Login() {
     }
   };
 
+  const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') ||
+                (typeof window !== 'undefined' && (window.NODE_ENV === 'development'));
+
   return (
     <div className="container" style={{ maxWidth: 420, marginTop: '10vh' }}>
       <div className="card">
@@ -64,6 +67,11 @@ export default function Login() {
             {submitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
+        {isDev && (
+          <div style={{ marginTop: '1rem', fontSize: 12, color: 'var(--text-secondary)' }}>
+            Dev tools: <Link className="link" to="/env">/env</Link>
+          </div>
+        )}
       </div>
     </div>
   );

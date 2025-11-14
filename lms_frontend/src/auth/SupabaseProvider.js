@@ -16,26 +16,31 @@ export const AuthContext = createContext(null);
 let warnedOnce = false;
 let infoOnce = false;
 
-// Resolve env values with fallback; log presence once
-assertRequiredEnv([
-  'REACT_APP_SUPABASE_URL',
-  'REACT_APP_SUPABASE_ANON_KEY',
-]);
+// Validate required keys and log one-time diagnostics
+assertRequiredEnv(['REACT_APP_SUPABASE_URL', 'REACT_APP_SUPABASE_ANON_KEY']);
 
 const envSnapshot = getEnv();
 const resolvedUrl = envSnapshot.REACT_APP_SUPABASE_URL || getStringEnv('REACT_APP_SUPABASE_URL', '');
 const resolvedAnon = envSnapshot.REACT_APP_SUPABASE_ANON_KEY || getStringEnv('REACT_APP_SUPABASE_ANON_KEY', '');
+const apiBase = envSnapshot.REACT_APP_API_BASE_URL || getStringEnv('REACT_APP_API_BASE_URL', '');
 
 if (!infoOnce) {
   infoOnce = true;
   try {
     // eslint-disable-next-line no-console
-    console.info('[supabase] init using URL present:', !!resolvedUrl, 'ANON present:', !!resolvedAnon);
-  } catch {/* no-op */}
+    console.info(
+      '[supabase] config detected:',
+      {
+        url: Boolean(resolvedUrl),
+        key: Boolean(resolvedAnon),
+        api: Boolean(apiBase),
+        hasWindowEnv: typeof window !== 'undefined' && !!window._env_,
+      }
+    );
+  } catch { /* no-op */ }
 }
 
-// Initialize a single shared Supabase client instance.
-// Using @supabase/supabase-js v2; v2 supports URL+KEY and accepts a single options object.
+// Initialize a single shared Supabase client instance (v2 API).
 export const supabase =
   resolvedUrl && resolvedAnon
     ? createClient(resolvedUrl, resolvedAnon, {

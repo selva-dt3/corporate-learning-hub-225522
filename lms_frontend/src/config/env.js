@@ -14,6 +14,52 @@ let infoLoggedOnce = false;
 
 /**
  * PUBLIC_INTERFACE
+ * getEnv
+ */
+export function getEnv() {
+  /**
+   * Return a shallow snapshot of resolved env keys we care about.
+   * Add more keys here as the app evolves.
+   */
+  const keys = [
+    'REACT_APP_SUPABASE_URL',
+    'REACT_APP_SUPABASE_ANON_KEY',
+    'REACT_APP_API_BASE_URL',
+  ];
+  const w = (typeof window !== 'undefined' && window._env_) || {};
+  const p = (typeof process !== 'undefined' && process.env) || {};
+  const get = (k) => (w[k] ?? p[k] ?? '');
+
+  const out = {};
+  for (const k of keys) {
+    out[k] = get(k) || '';
+  }
+
+  // One-time info log about presence (mask values)
+  if (!infoLoggedOnce) {
+    infoLoggedOnce = true;
+    try {
+      // eslint-disable-next-line no-console
+      console.info(
+        '[env] presence',
+        {
+          REACT_APP_SUPABASE_URL: Boolean(out.REACT_APP_SUPABASE_URL),
+          REACT_APP_SUPABASE_ANON_KEY: Boolean(out.REACT_APP_SUPABASE_ANON_KEY),
+          REACT_APP_API_BASE_URL: Boolean(out.REACT_APP_API_BASE_URL),
+          hasWindowEnv: typeof window !== 'undefined' && !!window._env_,
+        },
+        '(window._env_ takes precedence over process.env)'
+      );
+    } catch {
+      /* noop */
+    }
+  }
+
+  return out;
+}
+
+/**
+ * PUBLIC_INTERFACE
  * fromEnv
  */
 export function fromEnv(key) {
@@ -21,15 +67,9 @@ export function fromEnv(key) {
   const k = String(key || '').trim();
   if (!k) return undefined;
 
-  const w = typeof window !== 'undefined' ? window : undefined;
-  const runtimeVal = w && w._env_ ? w._env_[k] : undefined;
-
-  // CRA build-time fallback via process.env
-  const processVal =
-    (typeof process !== 'undefined' && process.env ? process.env[k] : undefined) ??
-    (typeof process !== 'undefined' && process.env ? process.env[`REACT_APP_${k}`] : undefined);
-
-  return runtimeVal ?? processVal;
+  const w = (typeof window !== 'undefined' && window._env_) || {};
+  const p = (typeof process !== 'undefined' && process.env) || {};
+  return w[k] ?? p[k];
 }
 
 /**
@@ -52,46 +92,6 @@ export function getStringEnv(key, defaultValue = '') {
   const raw = fromEnv(key);
   if (raw == null || String(raw).length === 0) return defaultValue;
   return String(raw);
-}
-
-/**
- * PUBLIC_INTERFACE
- * getEnv
- */
-export function getEnv() {
-  /**
-   * Return a shallow snapshot of resolved env keys we care about.
-   * Add more keys here as the app evolves.
-   */
-  const keys = [
-    'REACT_APP_SUPABASE_URL',
-    'REACT_APP_SUPABASE_ANON_KEY',
-    'REACT_APP_API_BASE_URL',
-  ];
-  const out = {};
-  for (const k of keys) {
-    out[k] = getStringEnv(k, '');
-  }
-
-  // One-time info log about presence (with key masked)
-  if (!infoLoggedOnce) {
-    infoLoggedOnce = true;
-    try {
-      const masked = {
-        REACT_APP_SUPABASE_URL: !!out.REACT_APP_SUPABASE_URL,
-        REACT_APP_SUPABASE_ANON_KEY: out.REACT_APP_SUPABASE_ANON_KEY
-          ? `present:${String(out.REACT_APP_SUPABASE_ANON_KEY).slice(0, 6)}…(masked)`
-          : 'missing',
-        REACT_APP_API_BASE_URL: !!out.REACT_APP_API_BASE_URL,
-      };
-      // eslint-disable-next-line no-console
-      console.info('[env] resolved presence', masked, '(window._env_ takes precedence)');
-    } catch {
-      // no-op
-    }
-  }
-
-  return out;
 }
 
 /**

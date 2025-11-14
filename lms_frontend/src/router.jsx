@@ -13,6 +13,7 @@ import Analytics from './pages/Analytics';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import { useAuth } from './auth/useAuth';
+import EnvDebug from './pages/EnvDebug';
 
 function Shell({ children }) {
   const { role } = useAuth();
@@ -35,6 +36,9 @@ export default function Router() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      {/* Diagnostics route (safe; shows booleans only) */}
+      <Route path="/env" element={<EnvDebug />} />
+
       <Route element={<ProtectedRoute />}>
         <Route path="/onboarding" element={<Onboarding />} />
       </Route>

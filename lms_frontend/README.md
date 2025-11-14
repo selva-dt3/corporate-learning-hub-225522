@@ -92,6 +92,8 @@ Required:
 - `REACT_APP_API_BASE_URL`
 
 Behavior:
-- The app reads values in this order: `window._env_` -> `import.meta.env` -> `process.env`.
+- The app reads values in this order: `window._env_` -> `process.env` (CRA).
+- `public/index.html` loads `env.js` before the bundle so `window._env_` is always available.
 - Missing required keys produce a single console warning via `assertRequiredEnv`.
-- After editing `.env`, restart the dev server. After editing `public/env.js`, just refresh the browser.
+- After editing `.env`, restart the dev server. After editing `public/env.js`, hard refresh the browser to avoid cached script.
+- Diagnostics: open `/env` to verify booleans for expected keys (no secrets shown).
