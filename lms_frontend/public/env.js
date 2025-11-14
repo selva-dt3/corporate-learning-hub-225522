@@ -1,28 +1,22 @@
 (function () {
-  // Runtime environment configuration for the LMS frontend.
-  // This file is loaded by public/index.html before the React bundle.
-  // It allows overriding env without rebuilding the app.
-  var existing = (typeof window !== "undefined" && (window.__ENV__ || window._env_)) || {};
-
-  var injected = {
-    // REQUIRED: Set to your Supabase project URL
-    REACT_APP_SUPABASE_URL: existing.REACT_APP_SUPABASE_URL || "",
-    // REQUIRED: Set to your Supabase anon public key
-    REACT_APP_SUPABASE_ANON_KEY: existing.REACT_APP_SUPABASE_ANON_KEY || "",
-    // REQUIRED: Backend API base URL; defaults to local dev
-    REACT_APP_API_BASE_URL: existing.REACT_APP_API_BASE_URL || "http://localhost:3011"
+  // Merge-friendly initialization
+  var existing = (typeof window !== 'undefined' && (window.__ENV__ || window._env_)) || {};
+  var overrides = {
+    REACT_APP_SUPABASE_URL: "https://zladwgqmjudpsnhaunct.supabase.co",
+    REACT_APP_SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIs...",
+    REACT_APP_API_BASE_URL: "https://vscode-internal-12349-beta.beta01.cloud.kavia.ai:3001" // replace as needed
   };
 
-  // Merge into window.__ENV__ and mirror to window._env_ for CRA compatibility
-  window.__ENV__ = Object.assign({}, existing, injected);
+  // Define window.__ENV__ (primary) and mirror to window._env_ (compat)
+  window.__ENV__ = Object.assign({}, existing, overrides);
   window._env_ = window.__ENV__;
 
-  // Non-sensitive diagnostics
-  var presence = {
-    REACT_APP_SUPABASE_URL: !!window.__ENV__.REACT_APP_SUPABASE_URL,
-    REACT_APP_SUPABASE_ANON_KEY: !!window.__ENV__.REACT_APP_SUPABASE_ANON_KEY,
-    REACT_APP_API_BASE_URL: !!window.__ENV__.REACT_APP_API_BASE_URL
-  };
-  // eslint-disable-next-line no-console
-  console.log("[env.js] loaded", presence);
+  try {
+    // eslint-disable-next-line no-console
+    console.info('[env.js] runtime config loaded', {
+      REACT_APP_SUPABASE_URL: Boolean(window.__ENV__.REACT_APP_SUPABASE_URL),
+      REACT_APP_SUPABASE_ANON_KEY: Boolean(window.__ENV__.REACT_APP_SUPABASE_ANON_KEY),
+      REACT_APP_API_BASE_URL: Boolean(window.__ENV__.REACT_APP_API_BASE_URL)
+    });
+  } catch (_) { /* noop */ }
 })();
