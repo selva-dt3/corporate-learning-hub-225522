@@ -32,7 +32,7 @@ export function getSupabaseClient() {
     try {
       // eslint-disable-next-line no-console
       console.info('[supabase] presence', {
-        url: Boolean(resolvedUrl),
+        url_present: Boolean(resolvedUrl),
         anon_present: Boolean(resolvedAnon),
         api_present: Boolean(apiBase),
         hasWindowEnv: typeof window !== 'undefined' && !!window._env_,
@@ -130,6 +130,22 @@ export function SupabaseProvider({ children }) {
 
       // Validate required keys and log one-time diagnostics (presence only)
       assertRequiredEnv(['REACT_APP_SUPABASE_URL', 'REACT_APP_SUPABASE_ANON_KEY']);
+
+      // One-time masked diagnostic for Supabase config resolution
+      if (!infoOnce) {
+        infoOnce = true;
+        try {
+          const snapshot = getEnv();
+          // eslint-disable-next-line no-console
+          console.info('[supabase:init]', {
+            waited_for_env: true,
+            url_present: Boolean(snapshot.REACT_APP_SUPABASE_URL),
+            anon_present: Boolean(snapshot.REACT_APP_SUPABASE_ANON_KEY),
+            api_present: Boolean(snapshot.REACT_APP_API_BASE_URL),
+            hasWindowEnv: typeof window !== 'undefined' && !!window._env_,
+          });
+        } catch { /* noop */ }
+      }
 
       const sb = getSupabaseClient();
       if (!sb) {

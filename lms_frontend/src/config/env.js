@@ -12,6 +12,9 @@
 let warnedMissingOnce = false;
 let infoLoggedOnce = false;
 
+// Track readiness for modules that want to know if init happened
+let _envReady = false;
+
 // Internal singleton promise to ensure we fetch /env.js at most once if needed
 let _envInitPromise = null;
 
@@ -27,6 +30,7 @@ export function initEnv() {
    */
   if (typeof window === 'undefined') {
     // SSR/Node: nothing to do
+    _envReady = true;
     return Promise.resolve();
   }
 
@@ -36,10 +40,23 @@ export function initEnv() {
   // Basic predicate: do we have the expected keys?
   const hasKeys = () => {
     const w = window._env_ || {};
-    return Boolean(w?.REACT_APP_SUPABASE_URL || w?.REACT_APP_SUPABASE_ANON_KEY || w?.REACT_APP_API_BASE_URL);
+    return Boolean(
+      w?.REACT_APP_SUPABASE_URL ||
+      w?.REACT_APP_SUPABASE_ANON_KEY ||
+      w?.REACT_APP_API_BASE_URL
+    );
   };
 
   if (hasKeys()) {
+    _envReady = true;
+    try {
+      // eslint-disable-next-line no-console
+      console.info('[env:init] window._env_ already present', {
+        REACT_APP_SUPABASE_URL: Boolean(window._env_?.REACT_APP_SUPABASE_URL),
+        REACT_APP_SUPABASE_ANON_KEY: Boolean(window._env_?.REACT_APP_SUPABASE_ANON_KEY),
+        REACT_APP_API_BASE_URL: Boolean(window._env_?.REACT_APP_API_BASE_URL),
+      });
+    } catch { /* noop */ }
     _envInitPromise = Promise.resolve();
     return _envInitPromise;
   }
@@ -56,15 +73,49 @@ export function initEnv() {
         const fn = new Function(scriptText);
         fn();
       })
-      .catch(() => {
+      .catch((e) => {
+        try {
+          // eslint-disable-next-line no-console
+          console.warn('[env:init] failed to fetch /env.js, falling back to process.env only:', e?.message || e);
+        } catch { /* noop */ }
         // swallow - we'll fall back to process.env values only
       })
       .finally(() => {
+        _envReady = true;
+        try {
+          const w = window._env_ || {};
+          // eslint-disable-next-line no-console
+          console.info('[env:init] ready', {
+            REACT_APP_SUPABASE_URL: Boolean(w.REACT_APP_SUPABASE_URL),
+            REACT_APP_SUPABASE_ANON_KEY: Boolean(w.REACT_APP_SUPABASE_ANON_KEY),
+            REACT_APP_API_BASE_URL: Boolean(w.REACT_APP_API_BASE_URL),
+            source: w && Object.keys(w).length ? 'window._env_' : 'process.env',
+          });
+        } catch { /* noop */ }
         resolve();
       });
   });
 
   return _envInitPromise;
+}
+
+/**
+ * PUBLIC_INTERFACE
+ * getEnv
+ */
+export function isEnvReady() {
+  /** Return true if initEnv has completed (or no-op for SSR). */
+  return _envReady === true;
+}
+
+/**
+ * PUBLIC_INTERFACE
+ * waitForEnv
+ */
+export async function waitForEnv() {
+  /** Await env readiness (resolves immediately if already ready). */
+  if (_envReady) return;
+  await initEnv();
 }
 
 /**

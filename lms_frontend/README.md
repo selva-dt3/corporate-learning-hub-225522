@@ -28,7 +28,7 @@ REACT_APP_API_BASE_URL=http://localhost:3011
 
 Option B — Runtime via `public/env.js` (no rebuild):
 - `public/index.html` includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle so `window._env_` is available.
-- Edit `public/env.js` to set:
+- Edit `public/env.js` to set, for example (masked logs will confirm presence):
 ```js
 window._env_ = Object.assign({}, window._env_ || {}, {
   REACT_APP_SUPABASE_URL: "https://zladwgqmjudpsnhaunct.supabase.co",
@@ -38,8 +38,12 @@ window._env_ = Object.assign({}, window._env_ || {}, {
 ```
 Notes:
 - Values in `public/env.js` (window._env_) take precedence over `.env`.
-- Changing `public/env.js` requires only a browser refresh (no rebuild).
-- If the script is cached or didn’t load yet, the app will attempt a one-time fetch of `/env.js` during bootstrap and then proceed.
+- Changing `public/env.js` requires only a browser refresh (no rebuild). Prefer a hard refresh if cached.
+- If the script is cached or didn’t load yet, the app attempts a one-time fetch of `/env.js` during bootstrap and then proceeds.
+- Console diagnostics:
+  - `[env.js] loaded` when the runtime script is parsed
+  - `[env:init] ...` and `[bootstrap] env ready` confirm final presence
+  - `[supabase:init]` and `[supabase] presence` show masked Supabase readiness
 
 3. Run the app
 ```
