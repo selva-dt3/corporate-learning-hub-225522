@@ -27,20 +27,18 @@ REACT_APP_API_BASE_URL=http://localhost:3011
 ```
 
 Option B — Runtime via `public/env.js` (no rebuild):
-Edit `public/env.js` to set:
-```html
-<script>
-// Example values
-window._env_ = {
+- `public/index.html` includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle so `window._env_` is available.
+- Edit `public/env.js` to set:
+```js
+window._env_ = Object.assign({}, window._env_ || {}, {
   REACT_APP_SUPABASE_URL: "https://zladwgqmjudpsnhaunct.supabase.co",
   REACT_APP_SUPABASE_ANON_KEY: "<anon key>",
   REACT_APP_API_BASE_URL: "https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001"
-};
-</script>
+});
 ```
 Notes:
-- Runtime values in `window._env_` override `.env` values.
-- Changing `public/env.js` requires only a browser refresh.
+- Values in `public/env.js` (window._env_) take precedence over `.env`.
+- Changing `public/env.js` requires only a browser refresh (no rebuild).
 
 3. Run the app
 ```

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { createApiClient } from '../api/client';
-import { getStringEnv, assertRequiredEnv } from '../config/env';
+import { getStringEnv, assertRequiredEnv, getEnv } from '../config/env';
 
 // PUBLIC_INTERFACE
 export const AuthContext = createContext(null);
@@ -10,31 +10,42 @@ export const AuthContext = createContext(null);
  * Supabase client initialization from environment variables.
  * Reads from runtime (window._env_) or build-time (process.env).
  * Keys supported:
- * - REACT_APP_SUPABASE_URL or SUPABASE_URL
- * - REACT_APP_SUPABASE_ANON_KEY or SUPABASE_ANON_KEY
+ * - REACT_APP_SUPABASE_URL
+ * - REACT_APP_SUPABASE_ANON_KEY
  */
 let warnedOnce = false;
+let infoOnce = false;
 
-// Resolve env values with fallback
+// Resolve env values with fallback; log presence once
 assertRequiredEnv([
   'REACT_APP_SUPABASE_URL',
   'REACT_APP_SUPABASE_ANON_KEY',
 ]);
 
-const resolvedUrl =
-  getStringEnv('REACT_APP_SUPABASE_URL') || getStringEnv('SUPABASE_URL', '');
-const resolvedAnon =
-  getStringEnv('REACT_APP_SUPABASE_ANON_KEY') ||
-  getStringEnv('SUPABASE_ANON_KEY', '');
+const envSnapshot = getEnv();
+const resolvedUrl = envSnapshot.REACT_APP_SUPABASE_URL || getStringEnv('REACT_APP_SUPABASE_URL', '');
+const resolvedAnon = envSnapshot.REACT_APP_SUPABASE_ANON_KEY || getStringEnv('REACT_APP_SUPABASE_ANON_KEY', '');
+
+if (!infoOnce) {
+  infoOnce = true;
+  try {
+    // eslint-disable-next-line no-console
+    console.info('[supabase] init using URL present:', !!resolvedUrl, 'ANON present:', !!resolvedAnon);
+  } catch {/* no-op */}
+}
 
 // Initialize a single shared Supabase client instance.
-// Using @supabase/supabase-js v2 signature; third argument used for explicit auth config.
+// Using @supabase/supabase-js v2; v2 supports URL+KEY and accepts a single options object.
 export const supabase =
   resolvedUrl && resolvedAnon
     ? createClient(resolvedUrl, resolvedAnon, {
         auth: {
           persistSession: true,
-          autoRefreshToken: true,
+        },
+        global: {
+          headers: {
+            'X-Client-Info': 'lms-frontend',
+          },
         },
       })
     : null;

@@ -1,43 +1,35 @@
-//
-// Centralized environment variable reader for runtime and build-time values.
-//
-// - Order: window._env_ -> import.meta.env -> process.env -> REACT_APP_<key> fallback
-// - Logs a single warning if required keys are missing.
-// - Does not remove .env support; only adds runtime override capability.
-//
+/**
+ * Centralized environment variable reader for runtime and build-time values (CRA).
+ *
+ * Priority:
+ *  1) window._env_[KEY]  (runtime overrides loaded from public/env.js)
+ *  2) process.env[KEY]   (CRA build-time from .env)
+ *
+ * Notes:
+ * - Do NOT use import.meta.env in CRA; it's Vite-specific and can break builds.
+ * - Provide helpers plus a getEnv() snapshot and assertRequiredEnv() with one-time warning.
+ */
 let warnedMissingOnce = false;
+let infoLoggedOnce = false;
 
 /**
  * PUBLIC_INTERFACE
  * fromEnv
  */
 export function fromEnv(key) {
-  /** Read env value with runtime override support. */
+  /** Read env value with runtime override support (CRA-safe). */
   const k = String(key || '').trim();
   if (!k) return undefined;
 
   const w = typeof window !== 'undefined' ? window : undefined;
-
-  // Check runtime injected env first
   const runtimeVal = w && w._env_ ? w._env_[k] : undefined;
 
-  // Support Vite-like import.meta.env if present; guard access to avoid CRA parse errors
-  let importMetaVal;
-  try {
-    // eslint-disable-next-line no-new-func
-    const getImportMetaEnv = new Function('return (typeof importMeta!=="undefined" && importMeta.env) ? importMeta.env : (typeof import!=="undefined" && import.meta && import.meta.env ? import.meta.env : undefined);');
-    const metaEnv = getImportMetaEnv();
-    importMetaVal = metaEnv ? metaEnv[k] : undefined;
-  } catch {
-    importMetaVal = undefined;
-  }
-
-  // CRA process.env and REACT_APP_ prefixed fallback
+  // CRA build-time fallback via process.env
   const processVal =
     (typeof process !== 'undefined' && process.env ? process.env[k] : undefined) ??
     (typeof process !== 'undefined' && process.env ? process.env[`REACT_APP_${k}`] : undefined);
 
-  return runtimeVal ?? importMetaVal ?? processVal;
+  return runtimeVal ?? processVal;
 }
 
 /**
@@ -64,6 +56,46 @@ export function getStringEnv(key, defaultValue = '') {
 
 /**
  * PUBLIC_INTERFACE
+ * getEnv
+ */
+export function getEnv() {
+  /**
+   * Return a shallow snapshot of resolved env keys we care about.
+   * Add more keys here as the app evolves.
+   */
+  const keys = [
+    'REACT_APP_SUPABASE_URL',
+    'REACT_APP_SUPABASE_ANON_KEY',
+    'REACT_APP_API_BASE_URL',
+  ];
+  const out = {};
+  for (const k of keys) {
+    out[k] = getStringEnv(k, '');
+  }
+
+  // One-time info log about presence (with key masked)
+  if (!infoLoggedOnce) {
+    infoLoggedOnce = true;
+    try {
+      const masked = {
+        REACT_APP_SUPABASE_URL: !!out.REACT_APP_SUPABASE_URL,
+        REACT_APP_SUPABASE_ANON_KEY: out.REACT_APP_SUPABASE_ANON_KEY
+          ? `present:${String(out.REACT_APP_SUPABASE_ANON_KEY).slice(0, 6)}…(masked)`
+          : 'missing',
+        REACT_APP_API_BASE_URL: !!out.REACT_APP_API_BASE_URL,
+      };
+      // eslint-disable-next-line no-console
+      console.info('[env] resolved presence', masked, '(window._env_ takes precedence)');
+    } catch {
+      // no-op
+    }
+  }
+
+  return out;
+}
+
+/**
+ * PUBLIC_INTERFACE
  * assertRequiredEnv
  */
 export function assertRequiredEnv(keys = []) {
@@ -78,7 +110,7 @@ export function assertRequiredEnv(keys = []) {
     // eslint-disable-next-line no-console
     console.warn(
       `Missing required environment variables: ${missing.join(', ')}. ` +
-        `Set them in public/env.js via window._env_ or in .env and restart dev server.`
+        `Set them in public/env.js via window._env_ (takes precedence) or in .env and restart dev server.`
     );
   }
   return missing.length === 0;
