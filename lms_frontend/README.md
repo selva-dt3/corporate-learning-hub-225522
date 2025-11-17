@@ -22,83 +22,74 @@ Create a `.env` file at the project root (next to `package.json`) with:
 REACT_APP_SUPABASE_URL=<Your Supabase project URL>
 REACT_APP_SUPABASE_ANON_KEY=<Your Supabase anon key>
 REACT_APP_API_BASE_URL=http://localhost:3011
-# Confirmed cloud backend (beta env):
-# REACT_APP_API_BASE_URL=https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001
+# Example cloud backend (beta):
+# REACT_APP_API_BASE_URL=https://vscode-internal-20103-beta.beta01.cloud.kavia.ai:3001
 ```
 
 Option B — Runtime via `public/env.js` (no rebuild):
-- `public/index.html` includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle so runtime env is available.
-- Edit `public/env.js` to set values on `window.__ENV__` (automatically mirrored to `window._env_`):
+- `public/index.html` includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle.
+- Edit `public/env.js`:
 ```js
 (function () {
   window.__ENV__ = Object.assign({}, window.__ENV__ || window._env_ || {}, {
-    REACT_APP_SUPABASE_URL: "https://zladwgqmjudpsnhaunct.supabase.co",
+    REACT_APP_SUPABASE_URL: "https://YOUR_PROJECT.supabase.co",
     REACT_APP_SUPABASE_ANON_KEY: "<anon key>",
-    REACT_APP_API_BASE_URL: "https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001"
+    REACT_APP_API_BASE_URL: "https://vscode-internal-20103-beta.beta01.cloud.kavia.ai:3001"
   });
   window._env_ = window.__ENV__;
+  // console.log("[env.js] loaded", Object.keys(window.__ENV__||{})); // optional
 })();
 ```
 Notes:
-- Values in `public/env.js` take precedence over `.env`.
-- Changing `public/env.js` requires only a browser refresh (no rebuild). Prefer a hard refresh if cached.
-- If the script didn’t load yet, the app attempts a one-time fetch of `/env.js` during bootstrap and then proceeds.
-- Console diagnostics:
-  - `[env.js] loaded` when the runtime script is parsed
-  - `[env:init] ...` and `[bootstrap] env ready` confirm presence booleans
-  - `[supabase:init]` and `[supabase] presence` show masked Supabase readiness
+- `public/env.js` overrides `.env` at runtime.
+- Change in `public/env.js` → refresh browser (hard refresh if cached).
+- App will attempt a one-time fetch of `/env.js` at bootstrap if runtime env not yet present.
 
 3. Run the app
 ```
 npm start
 ```
 
-If you update `.env`, restart the dev server or your preview instance so changes take effect.  
-If you update `public/env.js`, a normal refresh is typically enough. If the file looks cached, perform a hard refresh (Shift+Reload).
-
 Open http://localhost:3000 in your browser.
 
 ## Integration with Backend
 
-- API base URL is read from `REACT_APP_API_BASE_URL` (or `window._env_.REACT_APP_API_BASE_URL` / `window.__ENV__.REACT_APP_API_BASE_URL`).
-- Each request includes `Authorization: Bearer <supabase_access_token>` when the user is signed in.
-- Ensure backend CORS allows your frontend origin (e.g., http://localhost:3000) and any deployed host you use. Mismatch of origins will block requests.
+- API base URL: `REACT_APP_API_BASE_URL` (from runtime env or `.env`).
+- Authorization: every request includes `Authorization: Bearer <supabase_access_token>` if signed in.
+- CORS: backend must allow your origin via CORS_ORIGINS; otherwise browser blocks requests.
 
 Runtime env quick check:
-- Confirm `public/env.js` exists and loads (see `[env.js] loaded` in console).
-- Visit `/env` to see presence booleans for required keys.
-- Keys required:
+- See `[env.js] loaded` in console when runtime script is parsed.
+- Visit `/env` to see presence booleans for keys:
   - REACT_APP_SUPABASE_URL
   - REACT_APP_SUPABASE_ANON_KEY
   - REACT_APP_API_BASE_URL
-- For cloud preview, set REACT_APP_API_BASE_URL to the running backend base URL (e.g., https://vscode-internal-12349-beta.beta01.cloud.kavia.ai:3001).
 
 ## Project Structure
 
-- `src/auth/SupabaseProvider.js` — Initializes a single Supabase client (v2 signature), provides auth/session/role, profile fetching, and onboarding completion.
-- `src/auth/ProtectedRoute.jsx` — Enforces authentication and optional roles; redirects to onboarding if incomplete.
-- `src/api/client.js` — Fetch wrapper with `Authorization: Bearer <token>`, base URL from env.
-- `src/config/env.js` — Centralized environment reader with Promise-based `initEnv()` that loads runtime env and fetches `/env.js` once if needed.
-- `src/router.jsx` — App routes using `react-router-dom`, with nested shell layout (Sidebar + Topbar).
-- React Router v7 future flags enabled to silence deprecation warnings (set on router).
-- `src/pages` — Login, Onboarding, and role-specific dashboards; Lessons, Quizzes, Analytics pages.
-- `src/components/layout` — Sidebar and Topbar shared layout components.
-- `src/App.css` — Theme and layout styles using Ocean Professional color palette.
+- `src/auth/SupabaseProvider.js` — Initialize Supabase client, manage session and profile, onboarding completion.
+- `src/auth/ProtectedRoute.jsx` — Authentication and role-based route guards.
+- `src/api/client.js` — Fetch wrapper with bearer token; base URL from env.
+- `src/config/env.js` — Environment loader; fetches `/env.js` at runtime if needed.
+- `src/router.jsx` — Routes and role dashboards.
+- `src/pages` — Login, Onboarding, Dashboards, Lessons, Quizzes, Analytics.
+- `src/components/layout` — Sidebar and Topbar.
+- `src/App.css` — Ocean Professional theme.
 
 ## Security
 
-- No secrets are hardcoded.
-- Tokens are read at runtime from Supabase session.
-- All API calls include the bearer token when available.
-- Logs mask keys: we only log boolean presence of env vars.
+- No hardcoded secrets.
+- Tokens only read at runtime from Supabase session.
+- Only boolean presence of env vars is logged for diagnostics.
 
-## Quick E2E sanity (manual)
+## End-to-End Verification
 
-1) Start backend at http://localhost:3011 (see backend README) and frontend at http://localhost:3000  
-2) Login using a Supabase user that has a profile row in public.profiles  
-3) Complete onboarding form  
-4) Verify redirect to role dashboard (admin/hr/employee)  
-5) Navigate to Lessons (list/create), Quizzes (list/create for admin/hr), and Analytics (for hr/admin only)
+1) Start backend http://localhost:3011 and frontend http://localhost:3000.
+2) Login using Supabase user.
+3) Complete onboarding; should route to appropriate role dashboard.
+4) As admin/hr: create/list Lessons and Quizzes; create Assignments.
+5) As employee: open assigned quiz; submit answers.
+6) Analytics (admin/hr): verify summary loads.
 
 ## Environment Variables
 
@@ -108,9 +99,19 @@ Required:
 - `REACT_APP_API_BASE_URL`
 
 Behavior:
-- The app reads values in this order: `window._env_` (or `window.__ENV__`) -> `process.env` (CRA).
-- `public/index.html` loads `env.js` before the bundle so runtime env is available at startup.
-- The app also falls back to fetching `/env.js` once during bootstrap if it wasn’t already initialized.
-- Missing required keys produce a single console warning via `assertRequiredEnv`.
-- After editing `.env`, restart the dev server. After editing `public/env.js`, hard refresh the browser to avoid cached script.
-- Diagnostics: open `/env` to verify booleans for expected keys (no secrets shown).
+- Read order: `window.__ENV__` / `window._env_` → `process.env`.
+- `public/index.html` loads `env.js` before bundle.
+- Bootstrap falls back to fetching `/env.js` once if needed.
+- Missing keys: single console warning via `assertRequiredEnv`.
+- After editing `.env`, restart dev server. After editing `public/env.js`, hard refresh.
+
+## Troubleshooting
+
+- CORS blocked:
+  - Ensure backend CORS_ORIGINS includes your frontend origin exactly (protocol, host, port).
+- 401/403:
+  - Ensure session is active and Authorization header is present; verify backend SUPABASE_JWT_SECRET.
+- Stale runtime env:
+  - Hard refresh or clear cache for `env.js`.
+- Docs embedded:
+  - Request backend to include your origin in DOCS_FRAME_ANCESTORS.
