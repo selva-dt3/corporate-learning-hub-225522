@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../auth/useAuth';
+import { KPICard, ChartPlaceholder } from '../components/layout/DashboardLayout';
+import Card from '../components/ui/Card';
 
 /**
  * Analytics summary for HR/Admin roles.
- * Renders cards for keys returned by GET /analytics/summary:
- *  - users, lessons, quizzes, assignments, quiz_submissions
- * Handles 401/403 by showing a role/access message.
+ * Renders KPI cards and chart placeholders.
  */
 // PUBLIC_INTERFACE
 export default function Analytics() {
@@ -36,17 +36,8 @@ export default function Analytics() {
     load();
   }, [api]);
 
-  const Card = ({ title, value, accent }) => (
-    <div className="card">
-      <h3 style={{ marginTop: 0 }}>{title}</h3>
-      <div style={{ fontSize: 28, fontWeight: 700, color: accent || 'inherit' }}>{value ?? '-'}</div>
-    </div>
-  );
-
   return (
     <div>
-      <h2 style={{ marginTop: 0 }}>Analytics</h2>
-
       {accessDenied && (
         <div className="status warning" style={{ display: 'block', marginBottom: '1rem' }}>
           You do not have access to analytics. This section is available to Admin and HR roles.
@@ -54,19 +45,28 @@ export default function Analytics() {
       )}
       {error && <div className="status error" style={{ display: 'block', marginBottom: '1rem' }}>{error}</div>}
 
-      <div className="form-row">
-        {loading ? (
-          <div className="card">Loading...</div>
-        ) : (
-          <>
-            <Card title="Users" value={summary?.users} />
-            <Card title="Lessons" value={summary?.lessons} />
-            <Card title="Quizzes" value={summary?.quizzes} />
-            <Card title="Assignments" value={summary?.assignments} />
-            <Card title="Quiz submissions" value={summary?.quiz_submissions} accent="var(--primary)" />
-          </>
-        )}
-      </div>
+      {loading ? (
+        <Card>Loading...</Card>
+      ) : (
+        <>
+          <div className="grid-tiles">
+            <div className="tile-span-3 tile-span-4"><KPICard label="Users" value={summary?.users} /></div>
+            <div className="tile-span-3 tile-span-4"><KPICard label="Lessons" value={summary?.lessons} /></div>
+            <div className="tile-span-3 tile-span-4"><KPICard label="Quizzes" value={summary?.quizzes} /></div>
+            <div className="tile-span-3 tile-span-4"><KPICard label="Assignments" value={summary?.assignments} /></div>
+            <div className="tile-span-3 tile-span-4"><KPICard label="Quiz submissions" value={summary?.quiz_submissions} /></div>
+          </div>
+
+          <div className="grid-tiles" style={{ marginTop: '1rem' }}>
+            <div className="tile-span-6 tile-span-12">
+              <ChartPlaceholder title="Activity overview" />
+            </div>
+            <div className="tile-span-6 tile-span-12">
+              <ChartPlaceholder title="Top lessons/quizzes" />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

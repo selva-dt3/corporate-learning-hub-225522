@@ -3,8 +3,14 @@
 This is the React frontend for the Corporate Learning Hub. In this deployment:
 - No Supabase authentication is used
 - All dashboards (Admin, HR, Employee) and pages (Lessons, Quizzes, Analytics) are publicly accessible
-- A simple Home page provides links to each dashboard and section
+- A polished Home page provides role cards (Admin, HR, Employee) with Ocean Professional theme
 - The API client does not attach Authorization headers by default
+
+Screenshots (placeholders):
+- Home: docs/screenshots/home.png
+- Admin Dashboard: docs/screenshots/admin.png
+- HR Dashboard: docs/screenshots/hr.png
+- Employee Dashboard: docs/screenshots/employee.png
 
 ## Getting Started
 
@@ -46,6 +52,38 @@ npm start
 
 Open http://localhost:3000 in your browser.
 
+## Design System (Ocean Professional)
+
+- Tokens: see `src/theme.css` (colors, spacing, shadows)
+- Core components (reusable, accessible):
+  - `Button` (`src/components/ui/Button.jsx`) variants: primary, secondary, ghost, danger
+  - `Card` (`src/components/ui/Card.jsx`)
+  - `Badge` (`src/components/ui/Badge.jsx`) variants: success, warning, error, info
+  - `Tabs` (`src/components/ui/Tabs.jsx`) headless ARIA tabs
+  - `Modal` (`src/components/ui/Modal.jsx`) focus management, ESC close
+  - `Toast` (`src/components/ui/Toast.jsx`) provider with `useToast()`
+
+Usage example:
+```jsx
+import Button from './components/ui/Button';
+import Card from './components/ui/Card';
+import { useToast } from './components/ui/Toast';
+
+function Example() {
+  const toast = useToast();
+  return (
+    <Card header="Demo">
+      <Button onClick={() => toast.show('Saved!', 'success')}>Save</Button>
+    </Card>
+  );
+}
+```
+
+## Layout
+
+- `DashboardLayout` (`src/components/layout/DashboardLayout.jsx`) used by Admin, HR, Employee dashboards, Lessons, Quizzes, Analytics.
+- Sidebar and Topbar refined styling with active states and ARIA roles.
+
 ## Integration with Backend
 
 - API base URL: `REACT_APP_API_BASE_URL` (from runtime env or `.env`).
@@ -58,25 +96,26 @@ Runtime env quick check:
 
 ## Project Structure
 
-- `src/auth/AppProvider.js` — Lightweight provider for no-auth mode, exposes a tokenless API client.
-- `src/auth/useAuth.js` — Backward-compatible hook that now reads from `AppProvider`.
+- `src/auth/AppProvider.js` — Provider for no-auth mode, tokenless API client.
 - `src/api/client.js` — Fetch wrapper without bearer token; base URL from env.
 - `src/config/env.js` — Environment loader; fetches `/env.js` at runtime if needed.
-- `src/router.jsx` — Public routes; Home page with links to dashboards.
-- `src/pages` — Dashboards, Lessons, Quizzes, Analytics. Login/Onboarding paths redirect to `/`.
-- `src/components/layout` — Sidebar and Topbar (auth controls removed).
-- `src/App.css` — Ocean Professional theme.
+- `src/router.jsx` — Public routes; Home and dashboards use shared layout.
+- `src/pages` — Dashboards, Lessons, Quizzes, Analytics.
+- `src/components/layout` — Sidebar, Topbar, DashboardLayout.
+- `src/components/ui` — Reusable UI components.
+- `src/theme.css` — Ocean Professional tokens.
 
-## Security Notes
+## Accessibility
 
-- No tokens are used; do not send sensitive data from the frontend.
-- Only boolean presence of env vars is logged for diagnostics.
+- Buttons, Tabs, Modal include appropriate ARIA attributes.
+- Focus states are visible (focus ring).
+- Landmark roles used (nav, region, dialog).
 
 ## End-to-End (No-Auth)
 
 1) Start backend http://localhost:3011 and frontend http://localhost:3000.
 2) Navigate to `/` and choose a dashboard.
-3) Lessons/Quizzes: try creating/listing to validate backend behavior. In no-auth mode, the backend may respond with 401/403 if it requires auth — this is expected.
+3) Lessons/Quizzes: try creating/listing to validate backend behavior.
 4) Analytics: loads summary if backend allows unauthenticated access; otherwise a friendly error is displayed.
 
 ## Environment Variables

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import { KPICard, ChartPlaceholder } from '../components/layout/DashboardLayout';
 
 /**
  * HR dashboard for assignments and team progress, with analytics snapshot.
@@ -24,35 +27,37 @@ export default function DashboardHR() {
     load();
   }, [api]);
 
-  const Stat = ({ label, value }) => (
-    <div className="card">
-      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800 }}>{value ?? '-'}</div>
-    </div>
-  );
-
   return (
     <div>
-      <h2 style={{ marginTop: 0 }}>HR Dashboard</h2>
-      <p className="card">Hello {profile?.full_name || 'HR'}, monitor team learning progress.</p>
+      <Card>
+        <p style={{ margin: 0 }}>Hello <strong>{profile?.full_name || 'HR'}</strong>, monitor team learning progress.</p>
+      </Card>
 
-      {error && <div className="status error" style={{ marginBottom: '1rem' }}>{error}</div>}
+      {error && <div className="status error" style={{ margin: '0.75rem 0' }}>{error}</div>}
 
-      <div className="form-row" style={{ marginBottom: '1rem' }}>
-        <Stat label="Users" value={summary?.users} />
-        <Stat label="Lessons" value={summary?.lessons} />
-        <Stat label="Quizzes" value={summary?.quizzes} />
-        <Stat label="Assignments" value={summary?.assignments} />
+      <div className="grid-tiles" style={{ marginTop: '1rem' }}>
+        <div className="tile-span-3 tile-span-4"><KPICard label="Users" value={summary?.users} /></div>
+        <div className="tile-span-3 tile-span-4"><KPICard label="Lessons" value={summary?.lessons} /></div>
+        <div className="tile-span-3 tile-span-4"><KPICard label="Quizzes" value={summary?.quizzes} /></div>
+        <div className="tile-span-3 tile-span-4"><KPICard label="Assignments" value={summary?.assignments} /></div>
       </div>
 
-      <div className="card">
-        <h3 style={{ marginTop: 0 }}>Quick links</h3>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <Link className="btn" to="/lessons">Manage Lessons</Link>
-          <Link className="btn" to="/quizzes" style={{ background: 'var(--secondary)' }}>Manage Quizzes</Link>
-          <Link className="btn" to="/analytics">View Analytics</Link>
+      <div className="grid-tiles" style={{ marginTop: '1rem' }}>
+        <div className="tile-span-6 tile-span-12">
+          <ChartPlaceholder title="Team completion trends" />
+        </div>
+        <div className="tile-span-6 tile-span-12">
+          <ChartPlaceholder title="Assignments by status" />
         </div>
       </div>
+
+      <Card header={<strong>Quick links</strong>} style={{ marginTop: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <Button as={Link} to="/lessons">Manage Lessons</Button>
+          <Button as={Link} to="/quizzes" variant="secondary">Manage Quizzes</Button>
+          <Button as={Link} to="/analytics" variant="ghost">View Analytics</Button>
+        </div>
+      </Card>
     </div>
   );
 }
