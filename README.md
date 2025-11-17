@@ -20,6 +20,7 @@ Open http://localhost:3000.
 - Runtime overrides (no rebuild): edit `lms_frontend/public/env.js`
   - Values in `public/env.js` are injected into `window.__ENV__` and mirrored to `window._env_`. They take precedence over `.env`.
   - `public/index.html` includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle so runtime env is available.
+  - Supabase client is initialized using the supabase-js v2 single-object signature; only anon key is ever used on the client.
   - After changing `public/env.js`, perform a hard refresh (Shift+Reload) to avoid cached script issues.
   - A masked console log `[env.js] loaded` appears confirming presence of keys.
 

@@ -2,7 +2,7 @@
  * Centralized environment variable reader for runtime and build-time values (CRA).
  *
  * Priority:
- *  1) window._env_[KEY]  (runtime overrides loaded from public/env.js)
+ *  1) window.__ENV__[KEY] / window._env_[KEY]  (runtime overrides loaded from public/env.js)
  *  2) process.env[KEY]   (CRA build-time from .env)
  *
  * Notes:
@@ -24,8 +24,8 @@ let _envInitPromise = null;
  */
 export function initEnv() {
   /**
-   * Ensure window._env_ is populated before application bootstrap.
-   * If window._env_ is already present with expected keys, resolves immediately.
+   * Ensure window._env_ / window.__ENV__ is populated before application bootstrap.
+   * If already present with expected keys, resolves immediately.
    * Otherwise attempts a one-time fetch of /env.js to populate it, then resolves.
    */
   if (typeof window === 'undefined') {
@@ -39,7 +39,7 @@ export function initEnv() {
 
   // Basic predicate: do we have the expected keys?
   const hasKeys = () => {
-    const w = window._env_ || {};
+    const w = window.__ENV__ || window._env_ || {};
     return Boolean(
       w?.REACT_APP_SUPABASE_URL ||
       w?.REACT_APP_SUPABASE_ANON_KEY ||
@@ -48,13 +48,17 @@ export function initEnv() {
   };
 
   if (hasKeys()) {
+    // Mirror __ENV__ to _env_ for legacy usage
+    if (window.__ENV__ && !window._env_) {
+      window._env_ = window.__ENV__;
+    }
     _envReady = true;
     try {
       // eslint-disable-next-line no-console
-      console.info('[env:init] window._env_ already present', {
-        REACT_APP_SUPABASE_URL: Boolean(window._env_?.REACT_APP_SUPABASE_URL),
-        REACT_APP_SUPABASE_ANON_KEY: Boolean(window._env_?.REACT_APP_SUPABASE_ANON_KEY),
-        REACT_APP_API_BASE_URL: Boolean(window._env_?.REACT_APP_API_BASE_URL),
+      console.info('[env:init] runtime env present', {
+        REACT_APP_SUPABASE_URL: Boolean((window.__ENV__ || window._env_)?.REACT_APP_SUPABASE_URL),
+        REACT_APP_SUPABASE_ANON_KEY: Boolean((window.__ENV__ || window._env_)?.REACT_APP_SUPABASE_ANON_KEY),
+        REACT_APP_API_BASE_URL: Boolean((window.__ENV__ || window._env_)?.REACT_APP_API_BASE_URL),
       });
     } catch { /* noop */ }
     _envInitPromise = Promise.resolve();
@@ -63,7 +67,7 @@ export function initEnv() {
 
   // One-time dynamic loader as fallback if the script didn't load yet
   _envInitPromise = new Promise((resolve) => {
-    // Try to fetch env.js and eval it in global scope to populate window._env_
+    // Try to fetch env.js and eval it in global scope to populate window.__ENV__/_env_
     fetch('/env.js', { cache: 'no-store' })
       .then(async (resp) => {
         if (!resp.ok) throw new Error(`env.js HTTP ${resp.status}`);
@@ -72,6 +76,10 @@ export function initEnv() {
         // eslint-disable-next-line no-new-func
         const fn = new Function(scriptText);
         fn();
+        // Ensure mirror exists
+        if (window.__ENV__) {
+          window._env_ = window.__ENV__;
+        }
       })
       .catch((e) => {
         try {
@@ -83,13 +91,13 @@ export function initEnv() {
       .finally(() => {
         _envReady = true;
         try {
-          const w = window._env_ || {};
+          const w = window.__ENV__ || window._env_ || {};
           // eslint-disable-next-line no-console
           console.info('[env:init] ready', {
             REACT_APP_SUPABASE_URL: Boolean(w.REACT_APP_SUPABASE_URL),
             REACT_APP_SUPABASE_ANON_KEY: Boolean(w.REACT_APP_SUPABASE_ANON_KEY),
             REACT_APP_API_BASE_URL: Boolean(w.REACT_APP_API_BASE_URL),
-            source: w && Object.keys(w).length ? 'window._env_' : 'process.env',
+            source: w && Object.keys(w).length ? 'window.__ENV__/_env_' : 'process.env',
           });
         } catch { /* noop */ }
         resolve();
@@ -101,7 +109,7 @@ export function initEnv() {
 
 /**
  * PUBLIC_INTERFACE
- * getEnv
+ * getEnv readiness
  */
 export function isEnvReady() {
   /** Return true if initEnv has completed (or no-op for SSR). */
@@ -132,7 +140,7 @@ export function getEnv() {
     'REACT_APP_SUPABASE_ANON_KEY',
     'REACT_APP_API_BASE_URL',
   ];
-  const w = (typeof window !== 'undefined' && window._env_) || {};
+  const w = (typeof window !== 'undefined' && (window.__ENV__ || window._env_)) || {};
   const p = (typeof process !== 'undefined' && process.env) || {};
   const get = (k) => (w[k] ?? p[k] ?? '');
 
@@ -152,9 +160,9 @@ export function getEnv() {
           REACT_APP_SUPABASE_URL: Boolean(out.REACT_APP_SUPABASE_URL),
           REACT_APP_SUPABASE_ANON_KEY: Boolean(out.REACT_APP_SUPABASE_ANON_KEY),
           REACT_APP_API_BASE_URL: Boolean(out.REACT_APP_API_BASE_URL),
-          hasWindowEnv: typeof window !== 'undefined' && !!window._env_,
+          hasWindowEnv: typeof window !== 'undefined' && (!!window.__ENV__ || !!window._env_),
         },
-        '(window._env_ takes precedence over process.env)'
+        '(window.__ENV__/window._env_ takes precedence over process.env)'
       );
     } catch {
       /* noop */
@@ -173,7 +181,7 @@ export function fromEnv(key) {
   const k = String(key || '').trim();
   if (!k) return undefined;
 
-  const w = (typeof window !== 'undefined' && window._env_) || {};
+  const w = (typeof window !== 'undefined' && (window.__ENV__ || window._env_)) || {};
   const p = (typeof process !== 'undefined' && process.env) || {};
   return w[k] ?? p[k];
 }
@@ -216,7 +224,7 @@ export function assertRequiredEnv(keys = []) {
     // eslint-disable-next-line no-console
     console.warn(
       `Missing required environment variables: ${missing.join(', ')}. ` +
-        `Set them in public/env.js via window._env_ (takes precedence) or in .env and restart dev server.`
+        `Set them in public/env.js via window.__ENV__ (preferred, takes precedence) or in .env and restart dev server.`
     );
   }
   return missing.length === 0;

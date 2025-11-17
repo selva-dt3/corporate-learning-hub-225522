@@ -41,7 +41,10 @@ export function getSupabaseClient() {
   }
 
   if (resolvedUrl && resolvedAnon) {
-    supabase = createClient(resolvedUrl, resolvedAnon, {
+    // Updated for supabase-js v2: use single-object signature { url, anonKey, options }
+    supabase = createClient({
+      url: resolvedUrl,
+      anonKey: resolvedAnon,
       auth: {
         persistSession: true,
         autoRefreshToken: true,
