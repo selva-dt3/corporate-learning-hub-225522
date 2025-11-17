@@ -9,6 +9,7 @@ Prerequisites:
 - Supabase project with at least one test user.
 
 Frontend runtime config:
+- lms_frontend/public/index.html contains the script tag for env.js before the bundle
 - lms_frontend/public/env.js contains:
   - window.__ENV__.REACT_APP_SUPABASE_URL
   - window.__ENV__.REACT_APP_SUPABASE_ANON_KEY

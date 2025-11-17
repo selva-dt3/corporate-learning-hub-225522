@@ -1,11 +1,10 @@
 import { getStringEnv } from '../config/env';
 
-//
-// API client with Supabase JWT forwarding.
-//
 /**
  * PUBLIC_INTERFACE
  * createApiClient
+ * Create a minimal fetch-based API client that injects the Supabase access token.
+ * Adds robust JSON/text parsing, friendly error messages, and includes credentials for CORS cookies compatibility.
  */
 export function createApiClient(getTokenFn) {
   /** Create a minimal fetch-based API client that injects the Supabase access token.
@@ -18,10 +17,12 @@ export function createApiClient(getTokenFn) {
 
   if (!baseURL) {
     // Not throwing to support local dev without backend yet
-    // eslint-disable-next-line no-console
-    console.warn(
-      'API base URL is not set. Set REACT_APP_API_BASE_URL (or window._env_.REACT_APP_API_BASE_URL). API calls will use relative paths.'
-    );
+    try {
+      // eslint-disable-next-line no-console
+      console.warn(
+        'API base URL is not set. Set REACT_APP_API_BASE_URL (or window._env_.REACT_APP_API_BASE_URL). API calls will use relative paths.'
+      );
+    } catch { /* noop */ }
   }
 
   const buildHeaders = async (extra = {}) => {
@@ -33,16 +34,30 @@ export function createApiClient(getTokenFn) {
     };
   };
 
-  const handle = async (resp) => {
-    const text = await resp.text();
-    let data = null;
-    try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      data = text;
+  const parseBody = async (resp) => {
+    const contentType = resp.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        return await resp.json();
+      } catch {
+        // fall through to text parse
+      }
     }
+    const txt = await resp.text();
+    try {
+      return txt ? JSON.parse(txt) : null;
+    } catch {
+      return txt || null;
+    }
+  };
+
+  const handle = async (resp) => {
+    const data = await parseBody(resp);
     if (!resp.ok) {
-      const error = new Error(data?.message || 'API Error');
+      const msg =
+        (data && (data.message || data.error || data.detail)) ||
+        (resp.status === 401 ? 'Unauthorized' : 'API Error');
+      const error = new Error(String(msg));
       error.status = resp.status;
       error.data = data;
       throw error;
@@ -63,7 +78,7 @@ export function createApiClient(getTokenFn) {
   // PUBLIC_INTERFACE
   const get = async (path) => {
     const headers = await buildHeaders();
-    const resp = await fetch(url(path), { method: 'GET', headers });
+    const resp = await fetch(url(path), { method: 'GET', headers, credentials: 'include' });
     return handle(resp);
   };
   // PUBLIC_INTERFACE
@@ -73,6 +88,7 @@ export function createApiClient(getTokenFn) {
       method: 'POST',
       headers,
       body: JSON.stringify(body ?? {}),
+      credentials: 'include'
     });
     return handle(resp);
   };
@@ -83,13 +99,14 @@ export function createApiClient(getTokenFn) {
       method: 'PUT',
       headers,
       body: JSON.stringify(body ?? {}),
+      credentials: 'include'
     });
     return handle(resp);
   };
   // PUBLIC_INTERFACE
   const del = async (path) => {
     const headers = await buildHeaders();
-    const resp = await fetch(url(path), { method: 'DELETE', headers });
+    const resp = await fetch(url(path), { method: 'DELETE', headers, credentials: 'include' });
     return handle(resp);
   };
 

@@ -21,8 +21,8 @@ export default function Sidebar({ role }) {
         <NavLink to="/" end className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Dashboard</NavLink>
         <NavLink to="/lessons" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Lessons</NavLink>
         <NavLink to="/quizzes" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>Quizzes</NavLink>
-        {/* Placeholder route (not implemented in this milestone) */}
-        <span className="nav-item" aria-disabled="true" title="Assignments page coming soon" style={{ opacity: 0.6 }}>Assignments</span>
+        {/* Placeholder route (Assignments UI to be added) */}
+        <span className="nav-item" aria-disabled="true" title="Assignments UI coming soon" style={{ opacity: 0.6 }}>Assignments</span>
 
         {isManager && (
           <>

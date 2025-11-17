@@ -15,7 +15,7 @@ Environment configuration:
 - Build-time: `.env` (requires dev server restart)
 - Runtime overrides (no rebuild): edit `lms_frontend/public/env.js`
   - Values in `public/env.js` are injected into `window.__ENV__` and mirrored to `window._env_`. They take precedence over `.env`.
-  - public/index.html includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle to ensure runtime env is available.
+  - lms_frontend/public/index.html includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle to ensure runtime env is available.
   - After changing `public/env.js`, perform a hard refresh (Shift+Reload) to avoid cached script issues.
   - A masked console log `[env.js] loaded` will appear confirming presence of keys.
 

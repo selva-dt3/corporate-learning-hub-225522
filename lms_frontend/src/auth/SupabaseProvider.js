@@ -234,7 +234,7 @@ export function SupabaseProvider({ children }) {
     completeOnboarding: async (payload) => {
       // Attempt backend first
       try {
-        await api.post('/onboarding/complete', payload);
+        await api.post('/auth/onboarding/complete', payload);
       } catch (e) {
         // Fallback: update Supabase profile
         const sb = getSupabaseClient();

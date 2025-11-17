@@ -28,21 +28,24 @@ REACT_APP_API_BASE_URL=http://localhost:3011
 
 Option B — Runtime via `public/env.js` (no rebuild):
 - `public/index.html` includes `<script src="%PUBLIC_URL%/env.js"></script>` before the bundle so runtime env is available.
-- Edit `public/env.js` to set values on `window.__ENV__` (and mirrored automatically to `window._env_` for compatibility):
+- Edit `public/env.js` to set values on `window.__ENV__` (automatically mirrored to `window._env_`):
 ```js
-window.__ENV__ = Object.assign({}, window.__ENV__ || {}, {
-  REACT_APP_SUPABASE_URL: "https://zladwgqmjudpsnhaunct.supabase.co",
-  REACT_APP_SUPABASE_ANON_KEY: "<anon key>",
-  REACT_APP_API_BASE_URL: "https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001"
-});
+(function () {
+  window.__ENV__ = Object.assign({}, window.__ENV__ || window._env_ || {}, {
+    REACT_APP_SUPABASE_URL: "https://zladwgqmjudpsnhaunct.supabase.co",
+    REACT_APP_SUPABASE_ANON_KEY: "<anon key>",
+    REACT_APP_API_BASE_URL: "https://vscode-internal-31347-beta.beta01.cloud.kavia.ai:3001"
+  });
+  window._env_ = window.__ENV__;
+})();
 ```
 Notes:
 - Values in `public/env.js` take precedence over `.env`.
 - Changing `public/env.js` requires only a browser refresh (no rebuild). Prefer a hard refresh if cached.
-- If the script is cached or didn’t load yet, the app attempts a one-time fetch of `/env.js` during bootstrap and then proceeds.
+- If the script didn’t load yet, the app attempts a one-time fetch of `/env.js` during bootstrap and then proceeds.
 - Console diagnostics:
   - `[env.js] loaded` when the runtime script is parsed
-  - `[env:init] ...` and `[bootstrap] env ready` confirm final presence
+  - `[env:init] ...` and `[bootstrap] env ready` confirm presence booleans
   - `[supabase:init]` and `[supabase] presence` show masked Supabase readiness
 
 3. Run the app
