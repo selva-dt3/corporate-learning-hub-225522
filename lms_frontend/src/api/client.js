@@ -3,12 +3,11 @@ import { getStringEnv } from '../config/env';
 /**
  * PUBLIC_INTERFACE
  * createApiClient
- * Create a minimal fetch-based API client that injects the Supabase access token.
+ * Create a minimal fetch-based API client with no Authorization headers by default.
  * Adds robust JSON/text parsing, friendly error messages, and includes credentials for CORS cookies compatibility.
  */
-export function createApiClient(getTokenFn) {
-  /** Create a minimal fetch-based API client that injects the Supabase access token.
-   * @param {() => Promise<string|null>} getTokenFn - async function returning the current access token
+export function createApiClient() {
+  /**
    * @returns {{get:Function, post:Function, put:Function, del:Function}}
    */
   const baseURL =
@@ -16,7 +15,6 @@ export function createApiClient(getTokenFn) {
     getStringEnv('API_BASE_URL', '');
 
   if (!baseURL) {
-    // Not throwing to support local dev without backend yet
     try {
       // eslint-disable-next-line no-console
       console.warn(
@@ -25,11 +23,9 @@ export function createApiClient(getTokenFn) {
     } catch { /* noop */ }
   }
 
-  const buildHeaders = async (extra = {}) => {
-    const token = await getTokenFn?.();
+  const buildHeaders = (extra = {}) => {
     return {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...extra,
     };
   };
@@ -56,7 +52,7 @@ export function createApiClient(getTokenFn) {
     if (!resp.ok) {
       const msg =
         (data && (data.message || data.error || data.detail)) ||
-        (resp.status === 401 ? 'Unauthorized' : 'API Error');
+        'API Error';
       const error = new Error(String(msg));
       error.status = resp.status;
       error.data = data;
@@ -69,7 +65,6 @@ export function createApiClient(getTokenFn) {
     if (/^https?:\/\//.test(path)) return path;
     const base = baseURL || '';
     if (!base) {
-      // No base means use relative path to current origin
       return `/${path.replace(/^\//, '')}`;
     }
     return `${base.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
@@ -77,13 +72,13 @@ export function createApiClient(getTokenFn) {
 
   // PUBLIC_INTERFACE
   const get = async (path) => {
-    const headers = await buildHeaders();
+    const headers = buildHeaders();
     const resp = await fetch(url(path), { method: 'GET', headers, credentials: 'include' });
     return handle(resp);
   };
   // PUBLIC_INTERFACE
   const post = async (path, body) => {
-    const headers = await buildHeaders();
+    const headers = buildHeaders();
     const resp = await fetch(url(path), {
       method: 'POST',
       headers,
@@ -94,7 +89,7 @@ export function createApiClient(getTokenFn) {
   };
   // PUBLIC_INTERFACE
   const put = async (path, body) => {
-    const headers = await buildHeaders();
+    const headers = buildHeaders();
     const resp = await fetch(url(path), {
       method: 'PUT',
       headers,
@@ -105,7 +100,7 @@ export function createApiClient(getTokenFn) {
   };
   // PUBLIC_INTERFACE
   const del = async (path) => {
-    const headers = await buildHeaders();
+    const headers = buildHeaders();
     const resp = await fetch(url(path), { method: 'DELETE', headers, credentials: 'include' });
     return handle(resp);
   };

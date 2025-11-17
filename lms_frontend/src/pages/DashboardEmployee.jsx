@@ -3,30 +3,28 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 
 /**
- * Employee dashboard: shows personal assignment count and quick links.
+ * Employee dashboard (no-auth mode): shows generic counts and quick links.
  */
 // PUBLIC_INTERFACE
 export default function DashboardEmployee() {
-  const { profile, session, api } = useAuth();
+  const { profile, api } = useAuth();
   const [assignmentsCount, setAssignmentsCount] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const load = async () => {
-      const uid = session?.user?.id;
-      if (!uid) return;
       setError('');
       try {
-        const list = await api.get(`/assignments/by-user/${uid}`);
+        // In no-auth mode we don't have a user id; best-effort generic count
+        const list = await api.get(`/assignments`);
         const count = Array.isArray(list) ? list.length : (list?.items?.length || 0);
         setAssignmentsCount(count);
       } catch (e) {
-        // For employees this should be allowed; still handle gracefully
         setError(e?.message || 'Failed to load assignments');
       }
     };
     load();
-  }, [api, session]);
+  }, [api]);
 
   return (
     <div>
@@ -36,7 +34,7 @@ export default function DashboardEmployee() {
         {error && <div className="status error" style={{ marginBottom: '0.5rem' }}>{error}</div>}
         <div className="form-row">
           <div className="card">
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Your assignments</div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Assignments (demo)</div>
             <div style={{ fontSize: 28, fontWeight: 800 }}>{assignmentsCount == null ? '—' : assignmentsCount}</div>
           </div>
         </div>

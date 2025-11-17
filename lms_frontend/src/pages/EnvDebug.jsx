@@ -1,5 +1,5 @@
 import React from 'react';
-import { getEnv, getStringEnv } from '../config/env';
+import { getStringEnv } from '../config/env';
 
 /**
  * PUBLIC_INTERFACE
@@ -7,9 +7,8 @@ import { getEnv, getStringEnv } from '../config/env';
  */
 export default function EnvDebug() {
   /** Minimal diagnostics for env.js and process.env presence (no secrets). */
-  const env = getEnv();
   const hasWindowEnv = typeof window !== 'undefined' && !!window._env_;
-  const keys = ['REACT_APP_SUPABASE_URL', 'REACT_APP_SUPABASE_ANON_KEY', 'REACT_APP_API_BASE_URL'];
+  const keys = ['REACT_APP_API_BASE_URL'];
   const keysPresent = keys.reduce((acc, k) => {
     acc[k] = Boolean(getStringEnv(k, ''));
     return acc;

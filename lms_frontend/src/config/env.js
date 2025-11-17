@@ -56,8 +56,6 @@ export function initEnv() {
     try {
       // eslint-disable-next-line no-console
       console.info('[env:init] runtime env present', {
-        REACT_APP_SUPABASE_URL: Boolean((window.__ENV__ || window._env_)?.REACT_APP_SUPABASE_URL),
-        REACT_APP_SUPABASE_ANON_KEY: Boolean((window.__ENV__ || window._env_)?.REACT_APP_SUPABASE_ANON_KEY),
         REACT_APP_API_BASE_URL: Boolean((window.__ENV__ || window._env_)?.REACT_APP_API_BASE_URL),
       });
     } catch { /* noop */ }
@@ -94,8 +92,6 @@ export function initEnv() {
           const w = window.__ENV__ || window._env_ || {};
           // eslint-disable-next-line no-console
           console.info('[env:init] ready', {
-            REACT_APP_SUPABASE_URL: Boolean(w.REACT_APP_SUPABASE_URL),
-            REACT_APP_SUPABASE_ANON_KEY: Boolean(w.REACT_APP_SUPABASE_ANON_KEY),
             REACT_APP_API_BASE_URL: Boolean(w.REACT_APP_API_BASE_URL),
             source: w && Object.keys(w).length ? 'window.__ENV__/_env_' : 'process.env',
           });
@@ -136,8 +132,6 @@ export function getEnv() {
    * Add more keys here as the app evolves.
    */
   const keys = [
-    'REACT_APP_SUPABASE_URL',
-    'REACT_APP_SUPABASE_ANON_KEY',
     'REACT_APP_API_BASE_URL',
   ];
   const w = (typeof window !== 'undefined' && (window.__ENV__ || window._env_)) || {};
@@ -157,8 +151,6 @@ export function getEnv() {
       console.info(
         '[env] presence',
         {
-          REACT_APP_SUPABASE_URL: Boolean(out.REACT_APP_SUPABASE_URL),
-          REACT_APP_SUPABASE_ANON_KEY: Boolean(out.REACT_APP_SUPABASE_ANON_KEY),
           REACT_APP_API_BASE_URL: Boolean(out.REACT_APP_API_BASE_URL),
           hasWindowEnv: typeof window !== 'undefined' && (!!window.__ENV__ || !!window._env_),
         },
